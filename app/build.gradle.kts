@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.miftah.jakasforpassenger"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.miftah.jakasforpassenger"
