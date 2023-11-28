@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import com.miftah.jakasforpassenger.core.data.source.Result
 import com.miftah.jakasforpassenger.core.data.source.ViewModelFactory
 import com.miftah.jakasforpassenger.databinding.FragmentRegisterBinding
@@ -38,8 +39,9 @@ class RegisterFragment : Fragment() {
             viewModel.userRegis(username = username, email = email, password = password)
                 .observe(viewLifecycleOwner) { data ->
                     when (data) {
-                        is Result.Loading -> {}
+                        is Result.Loading -> binding.progressBar.visibility = View.VISIBLE
                         is Result.Error -> {
+                            binding.progressBar.visibility = View.GONE
                             Toast.makeText(
                                 requireContext(),
                                 "Error",
@@ -48,10 +50,12 @@ class RegisterFragment : Fragment() {
                         }
 
                         is Result.Success -> {
+                            binding.progressBar.visibility = View.GONE
                             Toast.makeText(
                                 requireContext(),
                                 "Sukses", Toast.LENGTH_SHORT
                             ).show()
+                            findNavController().popBackStack()
                         }
 
                         else -> {}

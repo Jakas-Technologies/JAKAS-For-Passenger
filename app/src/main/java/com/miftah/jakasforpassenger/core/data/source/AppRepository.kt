@@ -5,10 +5,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
 import com.google.gson.Gson
 import com.miftah.jakasforpassenger.core.data.source.preference.UserPreference
+import com.miftah.jakasforpassenger.core.data.source.remote.request.RegisterRequest
 import com.miftah.jakasforpassenger.core.data.source.remote.response.RegisterResponse
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiService
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 
 class AppRepository(
@@ -22,12 +21,9 @@ class AppRepository(
         password: String
     ): LiveData<Result<RegisterResponse>> = liveData {
         emit(Result.Loading)
-        val jsonObject = "{}"
-        val request = jsonObject.toRequestBody("application/json".toMediaTypeOrNull())
-
+        val registerRequest = RegisterRequest(name, email, password)
         try {
-            val response = apiService.register(request)
-
+            val response = apiService.register(registerRequest)
             emit(Result.Success(response))
         } catch (e: HttpException) {
             val jsonInString = e.response()?.errorBody()?.string()
