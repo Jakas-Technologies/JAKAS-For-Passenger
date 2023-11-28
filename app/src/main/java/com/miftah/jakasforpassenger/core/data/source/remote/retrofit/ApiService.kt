@@ -1,5 +1,9 @@
 package com.miftah.jakasforpassenger.core.data.source.remote.retrofit
 
+import com.miftah.jakasforpassenger.core.data.source.remote.response.LoginResponse
+import com.miftah.jakasforpassenger.core.data.source.remote.response.RegisterResponse
+import okhttp3.RequestBody
+import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
@@ -12,11 +16,8 @@ interface ApiService {
         @Field("password") password: String
     ): LoginResponse
 
-    @FormUrlEncoded
     @POST("register")
     suspend fun register(
-        @Field("name") name: String,
-        @Field("email") email: String,
-        @Field("password") password: String
-    ): ResultResponse
+        @Body params : RequestBody
+    ): RegisterResponse
 }
