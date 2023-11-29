@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-parcelize")
     id("com.google.devtools.ksp")
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -48,6 +49,7 @@ dependencies {
 
     // Data Preference
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
 
     // Room/KSP
     ksp("androidx.room:room-compiler:2.6.0")
