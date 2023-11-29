@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/authFragment"
-        android:name="com.miftah.jakasforpassenger.feature.auth.AuthFragment"
+        android:name="com.miftah.jakasforpassenger.ui.auth.AuthFragment"
         android:label="fragment_auth"
         tools:layout="@layout/fragment_auth" >
         <action
@@ -19,12 +19,12 @@
     </fragment>
     <fragment
         android:id="@+id/loginFragment"
-        android:name="com.miftah.jakasforpassenger.feature.auth.LoginFragment"
+        android:name="com.miftah.jakasforpassenger.ui.auth.LoginFragment"
         android:label="fragment_login"
         tools:layout="@layout/fragment_login" />
     <fragment
         android:id="@+id/registerFragment"
-        android:name="com.miftah.jakasforpassenger.feature.auth.RegisterFragment"
+        android:name="com.miftah.jakasforpassenger.ui.auth.RegisterFragment"
         android:label="fragment_register"
         tools:layout="@layout/fragment_register" />
 </navigation>

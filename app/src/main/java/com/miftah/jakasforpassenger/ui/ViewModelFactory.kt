@@ -1,10 +1,11 @@
-package com.miftah.jakasforpassenger.core.data.source
+package com.miftah.jakasforpassenger.ui
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.miftah.jakasforpassenger.core.data.source.AppRepository
 import com.miftah.jakasforpassenger.core.di.Injection
-import com.miftah.jakasforpassenger.feature.auth.OnboardingViewModel
+import com.miftah.jakasforpassenger.ui.auth.OnboardingViewModel
 
 class ViewModelFactory private constructor(private val appRepository: AppRepository) :
     ViewModelProvider.NewInstanceFactory() {

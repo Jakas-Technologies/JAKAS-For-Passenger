@@ -1,4 +1,4 @@
-package com.miftah.jakasforpassenger.feature.auth
+package com.miftah.jakasforpassenger.ui.auth
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,14 +9,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.miftah.jakasforpassenger.core.data.source.Result
-import com.miftah.jakasforpassenger.core.data.source.ViewModelFactory
 import com.miftah.jakasforpassenger.databinding.FragmentRegisterBinding
+import com.miftah.jakasforpassenger.ui.ViewModelFactory
 
 class RegisterFragment : Fragment() {
 
     private var _binding: FragmentRegisterBinding? = null
     private val binding get() = _binding!!
-
     private val viewModel: OnboardingViewModel by activityViewModels {
         ViewModelFactory.getInstance(requireContext())
     }
@@ -57,8 +56,6 @@ class RegisterFragment : Fragment() {
                             ).show()
                             findNavController().popBackStack()
                         }
-
-                        else -> {}
                     }
                 }
         }

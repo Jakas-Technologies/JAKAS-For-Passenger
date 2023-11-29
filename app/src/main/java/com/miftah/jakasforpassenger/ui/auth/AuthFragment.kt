@@ -1,4 +1,4 @@
-package com.miftah.jakasforpassenger.feature.auth
+package com.miftah.jakasforpassenger.ui.auth
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,14 +8,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.findNavController
 import com.miftah.jakasforpassenger.R
-import com.miftah.jakasforpassenger.core.data.source.ViewModelFactory
 import com.miftah.jakasforpassenger.databinding.FragmentAuthBinding
+import com.miftah.jakasforpassenger.ui.ViewModelFactory
 
 class AuthFragment : Fragment() {
 
     private var _binding: FragmentAuthBinding? = null
     private val binding get() = _binding!!
-
     private val viewModel: OnboardingViewModel by activityViewModels{
         ViewModelFactory.getInstance(requireContext())
     }
@@ -33,6 +32,9 @@ class AuthFragment : Fragment() {
 
         binding.btnAuthToRegis.setOnClickListener {
             it.findNavController().navigate(R.id.action_authFragment_to_registerFragment)
+        }
+        binding.btnAuthToLogin.setOnClickListener {
+            it.findNavController().navigate(R.id.action_authFragment_to_loginFragment)
         }
     }
 

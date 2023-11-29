@@ -1,4 +1,4 @@
-package com.miftah.jakasforpassenger.feature.auth
+package com.miftah.jakasforpassenger.ui.auth
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

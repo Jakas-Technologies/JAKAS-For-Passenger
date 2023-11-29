@@ -1,14 +1,15 @@
 package com.miftah.jakasforpassenger.core.data.source
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
-import com.google.gson.Gson
 import com.miftah.jakasforpassenger.core.data.source.preference.UserPreference
+import com.miftah.jakasforpassenger.core.data.source.remote.request.LoginRequest
 import com.miftah.jakasforpassenger.core.data.source.remote.request.RegisterRequest
+import com.miftah.jakasforpassenger.core.data.source.remote.response.LoginResponse
 import com.miftah.jakasforpassenger.core.data.source.remote.response.RegisterResponse
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiService
 import retrofit2.HttpException
+import timber.log.Timber
 
 class AppRepository(
     private val apiService: ApiService,
@@ -26,16 +27,22 @@ class AppRepository(
             val response = apiService.register(registerRequest)
             emit(Result.Success(response))
         } catch (e: HttpException) {
-            val jsonInString = e.response()?.errorBody()?.string()
-            val errorBody = Gson().fromJson(jsonInString, RegisterResponse::class.java)
-            val errorMessage = errorBody.message
-            Log.d(TAG, "userLogin: $errorMessage")
-            emit(Result.Error(errorMessage))
+            Timber.e(e)
+            emit(Result.Error(e.message.toString()))
+        }
+    }
+
+    fun userLogin(email: String, password: String): LiveData<Result<LoginResponse>> = liveData {
+        emit(Result.Loading)
+        val loginRequest = LoginRequest(email, password)
+        try {
+            val client = apiService.login(loginRequest)
+            emit(Result.Success(client))
+        } catch (e: HttpException) {
+            Timber.e(e)
+            emit(Result.Error(e.message.toString()))
         }
     }
 
 
-    companion object {
-        const val TAG = "AppRepositoryLog"
-    }
 }

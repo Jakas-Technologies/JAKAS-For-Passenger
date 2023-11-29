@@ -1,5 +1,6 @@
 package com.miftah.jakasforpassenger.core.data.source.remote.retrofit
 
+import com.miftah.jakasforpassenger.BuildConfig
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -12,9 +13,11 @@ class ApiConfig {
         private const val BASE_URL = "http://34.101.152.91:4000/"
 
         fun getApiService(token: String?): ApiService {
-            val loggingInterceptor =
-                HttpLoggingInterceptor()
-                    .setLevel(HttpLoggingInterceptor.Level.BODY) // <-- need attention
+            val loggingInterceptor = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+            } else {
+                HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.NONE)
+            }
 
             val authInterceptor = Interceptor { chain ->
                 val req = chain.request()
