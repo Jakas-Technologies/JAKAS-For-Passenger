@@ -5,7 +5,6 @@ import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiHelper
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiService
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiServiceImpl
 import com.miftah.jakasforpassenger.utils.Constants
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,7 +18,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class RemoteModule {
+object RemoteModule {
     @Provides
     @Named("URL")
     fun provideBaseUrl(): String = Constants.BASE_URL
@@ -54,8 +53,7 @@ abstract class RemoteModule {
     fun provideApiService(retrofit: Retrofit): ApiService =
         retrofit.create(ApiService::class.java)
 
-    @Binds
-    abstract fun bindApiServiceImpl(
-        apiServiceImpl : ApiServiceImpl
-    ) : ApiHelper
+    @Provides
+    @Singleton
+    fun bindApiServiceImpl(apiServiceImpl : ApiServiceImpl) : ApiHelper = apiServiceImpl
 }
