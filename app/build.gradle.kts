@@ -4,6 +4,7 @@ plugins {
     id("kotlin-parcelize")
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -43,11 +44,6 @@ android {
 }
 
 dependencies {
-    // Dagger - Hilt
-    implementation ("com.google.dagger:hilt-android:2.48.1")
-    ksp("com.google.dagger:dagger-compiler:2.48.1")
-    ksp("com.google.dagger:hilt-compiler:2.48.1")
-
     // Support
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation("androidx.annotation:annotation:1.7.0")
