@@ -8,17 +8,16 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import com.miftah.jakasforpassenger.utils.Result
 import com.miftah.jakasforpassenger.databinding.FragmentRegisterBinding
-import com.miftah.jakasforpassenger.ui.ViewModelFactory
+import com.miftah.jakasforpassenger.utils.Result
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class RegisterFragment : Fragment() {
 
     private var _binding: FragmentRegisterBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: OnboardingViewModel by activityViewModels {
-        ViewModelFactory.getInstance(requireContext())
-    }
+    private val viewModel: OnboardingViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

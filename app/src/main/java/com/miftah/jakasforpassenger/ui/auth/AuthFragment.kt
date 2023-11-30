@@ -9,15 +9,14 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.findNavController
 import com.miftah.jakasforpassenger.R
 import com.miftah.jakasforpassenger.databinding.FragmentAuthBinding
-import com.miftah.jakasforpassenger.ui.ViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AuthFragment : Fragment() {
 
     private var _binding: FragmentAuthBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: OnboardingViewModel by activityViewModels{
-        ViewModelFactory.getInstance(requireContext())
-    }
+    private val viewModel: OnboardingViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

@@ -2,8 +2,11 @@ package com.miftah.jakasforpassenger.ui.auth
 
 import androidx.lifecycle.ViewModel
 import com.miftah.jakasforpassenger.core.data.source.AppRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class OnboardingViewModel(private val repository : AppRepository) : ViewModel() {
+@HiltViewModel
+class OnboardingViewModel @Inject constructor(private val repository: AppRepository) : ViewModel() {
     fun userRegis(email: String, username: String, password: String) =
         repository.userRegis(name = username, email = email, password = password)
 
