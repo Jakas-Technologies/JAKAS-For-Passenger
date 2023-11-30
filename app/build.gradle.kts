@@ -31,6 +31,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -44,9 +45,22 @@ android {
 }
 
 dependencies {
+    // maps
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.libraries.places:places:3.3.0")
+    implementation("com.google.maps.android:android-maps-utils:2.3.0")
+    implementation("com.google.maps:google-maps-services:2.2.0")
+
+    // Dagger - Hilt
+    implementation ("com.google.dagger:hilt-android:2.48.1")
+    ksp("com.google.dagger:dagger-compiler:2.48.1")
+    ksp("com.google.dagger:hilt-compiler:2.48.1")
+
     // Support
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation("androidx.annotation:annotation:1.7.0")
+    implementation("org.slf4j:slf4j-simple:1.7.25")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
     // Data Preference
     implementation("androidx.datastore:datastore-preferences:1.0.0")
