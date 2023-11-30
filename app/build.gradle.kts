@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-parcelize")
     id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -42,6 +43,13 @@ android {
 }
 
 dependencies {
+    // Dagger - Hilt
+    implementation ("com.google.dagger:hilt-android:2.44.2")
+    ksp("com.google.dagger:hilt-android-compiler:2.44.2")
+
+    implementation ("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
+    ksp("androidx.hilt:hilt-compiler:1.1.0")
+
     // Support
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation("androidx.annotation:annotation:1.7.0")

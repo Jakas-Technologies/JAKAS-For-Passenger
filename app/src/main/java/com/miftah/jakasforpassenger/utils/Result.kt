@@ -1,4 +1,4 @@
-package com.miftah.jakasforpassenger.core.data.source
+package com.miftah.jakasforpassenger.utils
 
 sealed class Result<out R> private constructor() {
     data class Success<out T>(val data: T) : Result<T>()

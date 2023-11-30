@@ -8,7 +8,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import com.miftah.jakasforpassenger.core.data.source.Result
+import com.miftah.jakasforpassenger.utils.Result
 import com.miftah.jakasforpassenger.databinding.FragmentRegisterBinding
 import com.miftah.jakasforpassenger.ui.ViewModelFactory
 

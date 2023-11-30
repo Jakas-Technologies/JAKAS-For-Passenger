@@ -2,18 +2,18 @@ package com.miftah.jakasforpassenger.core.data.source
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
-import com.miftah.jakasforpassenger.core.data.source.preference.UserPreference
 import com.miftah.jakasforpassenger.core.data.source.remote.request.LoginRequest
 import com.miftah.jakasforpassenger.core.data.source.remote.request.RegisterRequest
 import com.miftah.jakasforpassenger.core.data.source.remote.response.LoginResponse
 import com.miftah.jakasforpassenger.core.data.source.remote.response.RegisterResponse
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiService
+import com.miftah.jakasforpassenger.utils.Result
 import retrofit2.HttpException
 import timber.log.Timber
+import javax.inject.Inject
 
-class AppRepository(
-    private val apiService: ApiService,
-    private val userPreference: UserPreference,
+class AppRepository @Inject constructor(
+    private val apiService: ApiService
 ) {
 
     fun userRegis(
