@@ -45,6 +45,12 @@ android {
 }
 
 dependencies {
+    // WorkManager
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // EasyPermission
+    implementation("com.vmadalin:easypermissions-ktx:1.0.0")
+
     // maps
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.libraries.places:places:3.3.0")
