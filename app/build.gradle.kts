@@ -62,6 +62,9 @@ dependencies {
     ksp("com.google.dagger:dagger-compiler:2.48.1")
     ksp("com.google.dagger:hilt-compiler:2.48.1")
 
+    implementation("androidx.hilt:hilt-work:1.1.0")
+    ksp("androidx.hilt:hilt-compiler:1.1.0")
+
     // Support
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation("androidx.annotation:annotation:1.7.0")

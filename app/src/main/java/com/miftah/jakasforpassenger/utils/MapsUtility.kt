@@ -3,10 +3,10 @@ package com.miftah.jakasforpassenger.utils
 import android.Manifest
 import android.content.Context
 import android.os.Build
+import com.google.maps.model.DirectionsResult
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
 import com.vmadalin.easypermissions.EasyPermissions
+
 
 object MapsUtility {
     fun hasLocationPermissions(context: Context) =
@@ -25,5 +25,18 @@ object MapsUtility {
             )
         }
 
+    fun convertToLatLngList(directionsResult: DirectionsResult): List<LatLng> {
+        val latLngList: MutableList<LatLng> = ArrayList()
+        if (directionsResult.routes.isNotEmpty()) {
 
+            val steps = directionsResult.routes[0].legs[0].steps
+            for (step in steps) {
+                val stepStartLatLng = step.startLocation
+                val stepEndLatLng = step.endLocation
+                latLngList.add(LatLng(stepStartLatLng.lat, stepStartLatLng.lng))
+                latLngList.add(LatLng(stepEndLatLng.lat, stepEndLatLng.lng))
+            }
+        }
+        return latLngList
+    }
 }

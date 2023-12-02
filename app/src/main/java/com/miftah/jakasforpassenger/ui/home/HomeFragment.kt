@@ -14,7 +14,9 @@ import com.miftah.jakasforpassenger.utils.Constants
 import com.miftah.jakasforpassenger.utils.MapsUtility
 import com.vmadalin.easypermissions.EasyPermissions
 import com.vmadalin.easypermissions.dialogs.SettingsDialog
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class HomeFragment : Fragment(), EasyPermissions.PermissionCallbacks {
 
     private var _binding: FragmentHomeBinding? = null
@@ -32,6 +34,7 @@ class HomeFragment : Fragment(), EasyPermissions.PermissionCallbacks {
         super.onViewCreated(view, savedInstanceState)
         requestPermissions()
         binding.btnHomeToGmaps.setOnClickListener {
+            requestPermissions()
             findNavController().navigate(R.id.action_homeFragment_to_mapsActivity)
         }
     }
