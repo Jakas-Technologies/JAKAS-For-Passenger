@@ -6,4 +6,7 @@
     <color name="md_blue_400">#42A5F5</color>
     <color name="md_blue_500">#2196F3</color>
     <color name="md_blue_700">#1976D2</color>
+    <color name="purple">#220B57</color>
+    <color name="red">#FF0000</color>
+    <color name="orange">#FFA500</color>
 </resources>
