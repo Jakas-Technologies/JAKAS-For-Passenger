@@ -48,6 +48,9 @@ dependencies {
     // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
+    // Service
+    implementation("androidx.lifecycle:lifecycle-service:2.6.2")
+
     // EasyPermission
     implementation("com.vmadalin:easypermissions-ktx:1.0.0")
 

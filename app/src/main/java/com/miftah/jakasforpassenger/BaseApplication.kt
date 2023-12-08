@@ -6,7 +6,7 @@ import androidx.work.Configuration
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
-import com.miftah.jakasforpassenger.core.work.FindRouteWorker
+import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 import javax.inject.Inject

@@ -55,6 +55,8 @@ class RegisterFragment : Fragment() {
                             ).show()
                             findNavController().popBackStack()
                         }
+
+                        else -> {}
                     }
                 }
         }

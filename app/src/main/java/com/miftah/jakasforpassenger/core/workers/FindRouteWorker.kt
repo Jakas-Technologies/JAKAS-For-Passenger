@@ -1,4 +1,4 @@
-package com.miftah.jakasforpassenger.core.work
+package com.miftah.jakasforpassenger.core.workers
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
