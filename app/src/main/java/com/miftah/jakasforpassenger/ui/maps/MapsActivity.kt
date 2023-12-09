@@ -1,6 +1,6 @@
 package com.miftah.jakasforpassenger.ui.maps
 
-import android.graphics.Color
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -30,10 +30,14 @@ import com.google.android.libraries.places.widget.listener.PlaceSelectionListene
 import com.google.maps.android.PolyUtil
 import com.google.maps.model.DirectionsResult
 import com.miftah.jakasforpassenger.R
+import com.miftah.jakasforpassenger.core.services.LocationTrackerService
 import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
 import com.miftah.jakasforpassenger.databinding.ActivityMapsBinding
+import com.miftah.jakasforpassenger.utils.Constants.ACTION_START_OR_RESUME_SERVICE
 import com.miftah.jakasforpassenger.utils.Constants.DESTINATION_LAT_LNG
 import com.miftah.jakasforpassenger.utils.Constants.KEY_MAP
+import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_COLOR
+import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_WIDTH
 import com.miftah.jakasforpassenger.utils.Constants.POSITION_LAT_LNG
 import com.miftah.jakasforpassenger.utils.MapObjective
 import timber.log.Timber
@@ -48,7 +52,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     private lateinit var autoCompleteDestination: AutocompleteSupportFragment
 
     private val latLngDestination: MutableMap<String, LatLng?> = mutableMapOf()
-    private var polylineRoute : Polyline? = null
+    private var polylineRoute: Polyline? = null
 
     private var markerDestination: Marker? = null
     private var markerPosition: Marker? = null
@@ -65,6 +69,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         mapFragment.getMapAsync(this)
 
         workManager = WorkManager.getInstance(this)
+
+        binding.btnFindPosition.setOnClickListener {
+            sendCommandToService(ACTION_START_OR_RESUME_SERVICE)
+        }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -86,8 +94,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             )
         )
 
-//        autoCompletePosition.setHint("Input Posisi")
-
         autoCompleteDestination =
             supportFragmentManager.findFragmentById(binding.autocompleteDestinationFragment.id) as AutocompleteSupportFragment
 
@@ -98,8 +104,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 Place.Field.ADDRESS
             )
         )
-
-//        autoCompleteDestination.setHint("Input Destinasi")
 
         autoCompleteDestination.setOnPlaceSelectedListener(object : PlaceSelectionListener {
             override fun onError(status: Status) {
@@ -229,8 +233,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         val decodedPath = PolyUtil.decode(directionsResult.routes[0].overviewPolyline.encodedPath)
 
         val polylineOptions = PolylineOptions().addAll(decodedPath)
-            .width(10f)
-            .color(Color.BLUE)
+            .width(POLYLINE_WIDTH)
+            .color(POLYLINE_COLOR)
 
         polylineRoute?.remove()
 
@@ -243,4 +247,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 50))
     }
+
+    private fun sendCommandToService(action : String) =
+        Intent(this, LocationTrackerService::class.java).let {
+            it.action = action
+            startService(it)
+        }
+
+
 }

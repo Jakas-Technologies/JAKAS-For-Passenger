@@ -33,6 +33,7 @@ class HomeFragment : Fragment(), EasyPermissions.PermissionCallbacks {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         requestPermissions()
+
         binding.btnHomeToGmaps.setOnClickListener {
             requestPermissions()
             findNavController().navigate(R.id.action_homeFragment_to_mapsActivity)
@@ -83,7 +84,7 @@ class HomeFragment : Fragment(), EasyPermissions.PermissionCallbacks {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 }
