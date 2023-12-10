@@ -17,4 +17,8 @@ interface ApiService {
     suspend fun register(
         @Body registerRequest: RegisterRequest
     ): RegisterResponse
+
+    // TODO endpoint Send to CC angkot apa
+
+    // TODO URL endpoint from CC angkot apa saja
 }

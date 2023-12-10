@@ -40,8 +40,10 @@ import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_COLOR
 import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_WIDTH
 import com.miftah.jakasforpassenger.utils.Constants.POSITION_LAT_LNG
 import com.miftah.jakasforpassenger.utils.MapObjective
+import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
+@AndroidEntryPoint
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapClickListener {
 
     private lateinit var mMap: GoogleMap
@@ -79,6 +81,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         mMap = googleMap
         mMap.setOnMapClickListener(this)
         setupAutoComplete()
+
+        viewModel.pointDestination.observe(this) { data ->
+            latLngDestination[MapObjective.DESTINATION.name] = data
+            makeMarker(data, MapObjective.DESTINATION)
+            findRoute()
+        }
+
+        viewModel.pointPosition.observe(this) { data ->
+            latLngDestination[MapObjective.POSITION.name] = data
+            makeMarker(data, MapObjective.POSITION)
+            findRoute()
+        }
     }
 
     private fun setupAutoComplete() {
@@ -115,9 +129,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 val latLng = place.latLng
                 latLng?.let { data ->
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(data, 12F))
-                    latLngDestination[MapObjective.DESTINATION.name] = data
-                    makeMarker(data, MapObjective.DESTINATION)
-                    findRoute()
+                    viewModel.updatePoint(MapObjective.DESTINATION, data)
                 }
 
             }
@@ -134,9 +146,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 val latLng = place.latLng
                 latLng?.let { data ->
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(data, 12F))
-                    latLngDestination[MapObjective.POSITION.name] = data
-                    makeMarker(data, MapObjective.POSITION)
-                    findRoute()
+                    viewModel.updatePoint(MapObjective.POSITION, data)
                 }
             }
 
@@ -146,24 +156,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     private var cursor = true
     override fun onMapClick(latLng: LatLng) {
         cursor = if (cursor) {
-            makeMarker(latLng, MapObjective.DESTINATION)
-            findRoute()
+            viewModel.updatePoint(MapObjective.DESTINATION, latLng)
             false
         } else {
-            makeMarker(latLng, MapObjective.POSITION)
-            findRoute()
+            viewModel.updatePoint(MapObjective.POSITION, latLng)
             true
         }
     }
 
-    private fun makeMarker(latLng: LatLng, markerName: MapObjective) {
+    private fun makeMarker(latLng: LatLng?, markerName: MapObjective) {
+        latLng ?: return
         when (markerName) {
             MapObjective.DESTINATION -> {
                 markerPosition = if (markerPosition == null) {
-                    latLngDestination[markerName.name] = latLng
                     mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
                 } else {
-                    latLngDestination.replace(markerName.name, latLng)
                     markerPosition?.remove()
                     mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
                 }
@@ -172,10 +179,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
             MapObjective.POSITION -> {
                 markerDestination = if (markerDestination == null) {
-                    latLngDestination[markerName.name] = latLng
                     mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
                 } else {
-                    latLngDestination.replace(markerName.name, latLng)
                     markerDestination?.remove()
                     mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
                 }
@@ -248,7 +253,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 50))
     }
 
-    private fun sendCommandToService(action : String) =
+    private fun sendCommandToService(action: String) =
         Intent(this, LocationTrackerService::class.java).let {
             it.action = action
             startService(it)

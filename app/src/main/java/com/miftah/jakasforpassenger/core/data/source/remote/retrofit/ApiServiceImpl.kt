@@ -15,4 +15,7 @@ class ApiServiceImpl @Inject constructor(
     override suspend fun register(registerRequest: RegisterRequest): RegisterResponse =
         apiService.register(registerRequest)
 
+    // TODO send to CC angkot pilihan
+
+    // TODO fetch from CC angkot apa saja
 }

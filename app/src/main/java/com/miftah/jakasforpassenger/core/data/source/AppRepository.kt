@@ -7,7 +7,10 @@ import com.miftah.jakasforpassenger.core.data.source.remote.request.RegisterRequ
 import com.miftah.jakasforpassenger.core.data.source.remote.response.LoginResponse
 import com.miftah.jakasforpassenger.core.data.source.remote.response.RegisterResponse
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiService
+import com.miftah.jakasforpassenger.core.dummy.Angkot
+import com.miftah.jakasforpassenger.core.dummy.Dummy
 import com.miftah.jakasforpassenger.utils.Result
+import kotlinx.coroutines.delay
 import retrofit2.HttpException
 import timber.log.Timber
 import javax.inject.Inject
@@ -44,5 +47,22 @@ class AppRepository @Inject constructor(
         }
     }
 
+    // TODO send to CC angkot pilihan
+    fun sendAngkotBaseUserInterest(
+        angkot: Angkot
+    ): LiveData<Result<Boolean>> = liveData {
+        emit(Result.Loading)
+        delay(500L)
+        emit(Result.Success(true))
+    }
 
+    // TODO fetch from CC angkot apa saja
+    fun findAngkotBaseOnPositionAndDestination(
+        position: String,
+        destination: String
+    ): LiveData<Result<List<Angkot>>> = liveData {
+        emit(Result.Loading)
+        delay(500L)
+        emit(Result.Success(Dummy.dummyAngkot()))
+    }
 }

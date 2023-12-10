@@ -9,4 +9,7 @@ interface ApiHelper {
     suspend fun login(loginRequest: LoginRequest) : LoginResponse
 
     suspend fun register(registerRequest: RegisterRequest) : RegisterResponse
+
+    // TODO send to CC angkot pilihan
+    // TODO fetch from CC angkot apa saja
 }
