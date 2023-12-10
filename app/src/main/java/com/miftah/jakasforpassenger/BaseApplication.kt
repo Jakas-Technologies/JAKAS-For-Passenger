@@ -9,7 +9,9 @@ import androidx.work.Configuration
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
+import com.miftah.jakasforpassenger.core.workers.FindUserWorker
 import com.miftah.jakasforpassenger.utils.Constants.NOTIFICATION_CHANNEL_ID
 import com.miftah.jakasforpassenger.utils.Constants.NOTIFICATION_CHANNEL_NAME
 import dagger.hilt.android.HiltAndroidApp
@@ -19,9 +21,13 @@ import javax.inject.Inject
 @HiltAndroidApp
 class BaseApplication : Application(), Configuration.Provider {
 
+    @Inject
+    lateinit var workerFactory: AppWorkerFactory
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
-            .setMinimumLoggingLevel(android.util.Log.INFO)
+            .setMinimumLoggingLevel(android.util.Log.DEBUG)
+            .setWorkerFactory(workerFactory)
             .build()
 
     override fun onCreate() {
@@ -31,7 +37,8 @@ class BaseApplication : Application(), Configuration.Provider {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val importance = NotificationManager.IMPORTANCE_LOW
             val channel =
                 NotificationChannel(NOTIFICATION_CHANNEL_ID, NOTIFICATION_CHANNEL_NAME, importance)
@@ -41,11 +48,27 @@ class BaseApplication : Application(), Configuration.Provider {
 
 }
 
-class FindRouteWorkerFactory @Inject constructor() : WorkerFactory() {
+class AppWorkerFactory @Inject constructor(private val fusedLocationProviderClient: FusedLocationProviderClient) :
+    WorkerFactory() {
     override fun createWorker(
         appContext: Context,
         workerClassName: String,
         workerParameters: WorkerParameters
-    ): ListenableWorker = FindRouteWorker(appContext, workerParameters)
+    ): ListenableWorker {
+        return when (workerClassName) {
+            FindRouteWorker::class.simpleName -> FindRouteWorker(
+                context = appContext,
+                workerParams = workerParameters
+            )
+
+            FindUserWorker::class.simpleName -> FindUserWorker(
+                fusedLocationProviderClient = fusedLocationProviderClient,
+                context = appContext,
+                workerParams = workerParameters
+            )
+
+            else -> throw Throwable("Unknown Worker class: $workerClassName")
+        }
+    }
 
 }

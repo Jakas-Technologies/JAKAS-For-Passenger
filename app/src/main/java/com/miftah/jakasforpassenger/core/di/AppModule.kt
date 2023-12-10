@@ -1,5 +1,8 @@
 package com.miftah.jakasforpassenger.core.di
 
+import android.content.Context
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.miftah.jakasforpassenger.BuildConfig
 import com.miftah.jakasforpassenger.core.data.source.AppRepository
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiHelper
@@ -9,6 +12,7 @@ import com.miftah.jakasforpassenger.utils.Constants
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -61,5 +65,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun bindApiServiceImpl(apiServiceImpl : ApiServiceImpl) : ApiHelper = apiServiceImpl
+    fun bindApiServiceImpl(apiServiceImpl: ApiServiceImpl): ApiHelper = apiServiceImpl
+
+    @Provides
+    @Singleton
+    fun provideFusedLocationProviderClient(@ApplicationContext app: Context): FusedLocationProviderClient =
+        LocationServices.getFusedLocationProviderClient(app)
 }

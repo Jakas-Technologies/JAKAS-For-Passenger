@@ -33,7 +33,7 @@ import com.miftah.jakasforpassenger.R
 import com.miftah.jakasforpassenger.core.services.LocationTrackerService
 import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
 import com.miftah.jakasforpassenger.databinding.ActivityMapsBinding
-import com.miftah.jakasforpassenger.utils.Constants.ACTION_START_OR_RESUME_SERVICE
+import com.miftah.jakasforpassenger.utils.Constants.ACTION_START_SERVICE
 import com.miftah.jakasforpassenger.utils.Constants.DESTINATION_LAT_LNG
 import com.miftah.jakasforpassenger.utils.Constants.KEY_MAP
 import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_COLOR
@@ -73,7 +73,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         workManager = WorkManager.getInstance(this)
 
         binding.btnFindPosition.setOnClickListener {
-            sendCommandToService(ACTION_START_OR_RESUME_SERVICE)
+            sendCommandToService(ACTION_START_SERVICE)
         }
     }
 
@@ -81,6 +81,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         mMap = googleMap
         mMap.setOnMapClickListener(this)
         setupAutoComplete()
+        findRoute()
 
         viewModel.pointDestination.observe(this) { data ->
             latLngDestination[MapObjective.DESTINATION.name] = data
