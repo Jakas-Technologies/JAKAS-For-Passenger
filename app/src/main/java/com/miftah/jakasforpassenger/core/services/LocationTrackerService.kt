@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
 import com.google.maps.model.LatLng
 import com.miftah.jakasforpassenger.R
+import com.miftah.jakasforpassenger.core.provider.LocationClient
 import com.miftah.jakasforpassenger.ui.maps.MapsActivity
 import com.miftah.jakasforpassenger.utils.Constants.ACTION_START_SERVICE
 import com.miftah.jakasforpassenger.utils.Constants.ACTION_STOP_SERVICE
@@ -14,19 +15,28 @@ import com.miftah.jakasforpassenger.utils.Constants.NOTIFICATION_CHANNEL_ID
 import com.miftah.jakasforpassenger.utils.Constants.NOTIFICATION_ID
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class LocationTrackerService : LifecycleService() {
 
     private var serviceKilled = false
 
+    @Inject
+    lateinit var locationClient : LocationClient
+
+    private lateinit var destinationPath : LatLng
+    private lateinit var positionPath : LatLng
+
     companion object {
         val userPosition = MutableLiveData<LatLng>()
-
+        val isTracking = MutableLiveData<Boolean>()
+        val pathDirection = MutableLiveData<List<LatLng>>()
     }
 
     override fun onCreate() {
         super.onCreate()
+
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -36,13 +46,17 @@ class LocationTrackerService : LifecycleService() {
                     Timber.d("Start Service")
                 }
 
-
                 ACTION_STOP_SERVICE -> {
                     Timber.d("stop service")
                 }
             }
         }
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun initService() {
+        isTracking.postValue(false)
+
     }
 
     private fun startForegroundService() {

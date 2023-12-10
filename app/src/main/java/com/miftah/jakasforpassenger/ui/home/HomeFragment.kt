@@ -35,8 +35,9 @@ class HomeFragment : Fragment(), EasyPermissions.PermissionCallbacks {
         requestPermissions()
 
         binding.btnHomeToGmaps.setOnClickListener {
-            requestPermissions()
-            findNavController().navigate(R.id.action_homeFragment_to_mapsActivity)
+            if (requestPermissions()) {
+                findNavController().navigate(R.id.action_homeFragment_to_mapsActivity)
+            }
         }
     }
 
@@ -45,9 +46,9 @@ class HomeFragment : Fragment(), EasyPermissions.PermissionCallbacks {
         super.onDestroy()
     }
 
-    private fun requestPermissions() {
+    private fun requestPermissions(): Boolean {
         if (MapsUtility.hasLocationPermissions(requireContext())) {
-            return
+            return true
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             EasyPermissions.requestPermissions(
@@ -67,6 +68,7 @@ class HomeFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION
             )
         }
+        return false
     }
 
     override fun onPermissionsDenied(requestCode: Int, perms: List<String>) {

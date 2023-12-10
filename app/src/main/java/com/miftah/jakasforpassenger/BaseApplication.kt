@@ -9,7 +9,7 @@ import androidx.work.Configuration
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
-import com.google.android.gms.location.FusedLocationProviderClient
+import com.miftah.jakasforpassenger.core.provider.LocationClient
 import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
 import com.miftah.jakasforpassenger.core.workers.FindUserWorker
 import com.miftah.jakasforpassenger.utils.Constants.NOTIFICATION_CHANNEL_ID
@@ -48,7 +48,7 @@ class BaseApplication : Application(), Configuration.Provider {
 
 }
 
-class AppWorkerFactory @Inject constructor(private val fusedLocationProviderClient: FusedLocationProviderClient) :
+class AppWorkerFactory @Inject constructor(private val locationClient: LocationClient) :
     WorkerFactory() {
     override fun createWorker(
         appContext: Context,
@@ -56,18 +56,19 @@ class AppWorkerFactory @Inject constructor(private val fusedLocationProviderClie
         workerParameters: WorkerParameters
     ): ListenableWorker {
         return when (workerClassName) {
-            FindRouteWorker::class.simpleName -> FindRouteWorker(
+            FindRouteWorker::class.java.name -> FindRouteWorker(
                 context = appContext,
                 workerParams = workerParameters
             )
 
-            FindUserWorker::class.simpleName -> FindUserWorker(
-                fusedLocationProviderClient = fusedLocationProviderClient,
+            FindUserWorker::class.java.name -> FindUserWorker(
+                locationClient = locationClient,
                 context = appContext,
                 workerParams = workerParameters
             )
 
-            else -> throw Throwable("Unknown Worker class: $workerClassName")
+            else -> throw Throwable("Unknown Worker class: $workerClassName" +
+                    "${FindRouteWorker::class.simpleName}")
         }
     }
 

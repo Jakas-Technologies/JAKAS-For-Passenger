@@ -8,6 +8,8 @@ import com.miftah.jakasforpassenger.core.data.source.AppRepository
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiHelper
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiService
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiServiceImpl
+import com.miftah.jakasforpassenger.core.provider.DefaultLocationClient
+import com.miftah.jakasforpassenger.core.provider.LocationClient
 import com.miftah.jakasforpassenger.utils.Constants
 import dagger.Module
 import dagger.Provides
@@ -71,4 +73,12 @@ object AppModule {
     @Singleton
     fun provideFusedLocationProviderClient(@ApplicationContext app: Context): FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(app)
+
+    @Provides
+    @Singleton
+    fun providesDefaultLocationClient(
+        fusedLocationProviderClient: FusedLocationProviderClient,
+        @ApplicationContext app: Context
+    ): LocationClient =
+        DefaultLocationClient(app, fusedLocationProviderClient)
 }

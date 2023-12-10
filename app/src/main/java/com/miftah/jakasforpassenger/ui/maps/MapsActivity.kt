@@ -1,5 +1,6 @@
 package com.miftah.jakasforpassenger.ui.maps
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -13,6 +14,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.google.android.gms.common.api.Status
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -33,15 +35,16 @@ import com.miftah.jakasforpassenger.R
 import com.miftah.jakasforpassenger.core.services.LocationTrackerService
 import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
 import com.miftah.jakasforpassenger.databinding.ActivityMapsBinding
-import com.miftah.jakasforpassenger.utils.Constants.ACTION_START_SERVICE
 import com.miftah.jakasforpassenger.utils.Constants.DESTINATION_LAT_LNG
 import com.miftah.jakasforpassenger.utils.Constants.KEY_MAP
+import com.miftah.jakasforpassenger.utils.Constants.MAP_ZOOM
+import com.miftah.jakasforpassenger.utils.Constants.MapObjective
 import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_COLOR
 import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_WIDTH
 import com.miftah.jakasforpassenger.utils.Constants.POSITION_LAT_LNG
-import com.miftah.jakasforpassenger.utils.MapObjective
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapClickListener {
@@ -55,6 +58,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
     private val latLngDestination: MutableMap<String, LatLng?> = mutableMapOf()
     private var polylineRoute: Polyline? = null
+
+    @Inject
+    lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
     private var markerDestination: Marker? = null
     private var markerPosition: Marker? = null
@@ -71,12 +77,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         mapFragment.getMapAsync(this)
 
         workManager = WorkManager.getInstance(this)
-
-        binding.btnFindPosition.setOnClickListener {
-            sendCommandToService(ACTION_START_SERVICE)
-        }
     }
 
+    @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.setOnMapClickListener(this)
@@ -93,6 +96,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             latLngDestination[MapObjective.POSITION.name] = data
             makeMarker(data, MapObjective.POSITION)
             findRoute()
+        }
+
+        binding.btnFindPosition.setOnClickListener {
+            fusedLocationProviderClient.lastLocation.addOnSuccessListener { data ->
+                if (data != null) {
+                    val latLng = LatLng(data.latitude, data.longitude)
+                    viewModel.updatePoint(MapObjective.POSITION, latLng)
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, MAP_ZOOM))
+                }else {
+                    Timber.d("Empty")
+                }
+            }
         }
     }
 

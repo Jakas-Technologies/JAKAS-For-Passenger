@@ -26,22 +26,11 @@ object MapsUtility {
             )
         }
 
-/*    fun convertToLatLngList(directionsResult: DirectionsResult): List<LatLng> {
-        val latLngList: MutableList<LatLng> = ArrayList()
-        if (directionsResult.routes.isNotEmpty()) {
-
-            val steps = directionsResult.routes[0].legs[0].steps
-            for (step in steps) {
-                val stepStartLatLng = step.startLocation
-                val stepEndLatLng = step.endLocation
-                latLngList.add(LatLng(stepStartLatLng.lat, stepStartLatLng.lng))
-                latLngList.add(LatLng(stepEndLatLng.lat, stepEndLatLng.lng))
-            }
-        }
-        return latLngList
-    }*/
-
-    fun isUserOnPath(userLocation: LatLng, polyline: List<LatLng>, tolerance: Double = 20.0): Boolean {
+    fun isUserOnPath(
+        userLocation: LatLng,
+        polyline: List<LatLng>,
+        tolerance: Double = 20.0
+    ): Boolean {
         return PolyUtil.isLocationOnPath(userLocation, polyline, true, tolerance)
     }
 
