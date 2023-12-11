@@ -7,8 +7,8 @@ import com.miftah.jakasforpassenger.core.data.source.remote.request.RegisterRequ
 import com.miftah.jakasforpassenger.core.data.source.remote.response.LoginResponse
 import com.miftah.jakasforpassenger.core.data.source.remote.response.RegisterResponse
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiService
-import com.miftah.jakasforpassenger.core.dummy.Angkot
 import com.miftah.jakasforpassenger.core.dummy.Dummy
+import com.miftah.jakasforpassenger.utils.Angkot
 import com.miftah.jakasforpassenger.utils.Result
 import kotlinx.coroutines.delay
 import retrofit2.HttpException

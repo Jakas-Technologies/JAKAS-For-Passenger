@@ -7,7 +7,7 @@ object Dummy {
             angkots.add(
                 Angkot(
                     department = "$i",
-                    price = i
+                    price = i * 1000
                 )
             )
         }

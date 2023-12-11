@@ -5,8 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.maps.MapsActivity"
-    android:padding="16dp">
+    tools:context=".ui.maps.MapsActivity">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/search_position"
@@ -41,7 +40,7 @@
             android:layout_height="match_parent" />
     </androidx.cardview.widget.CardView>
 
-    <!--<androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/ly_maps_bottom"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -80,7 +79,7 @@
             android:layout_marginHorizontal="5dp"
             android:text="Find"
             android:textSize="10sp"
-            android:visibility="gone"
+            android:visibility="visible"
             app:cornerRadius="10dp"
             app:layout_constraintBottom_toBottomOf="@+id/guideline_bottom"
             app:layout_constraintEnd_toEndOf="@id/ly_maps_bottom"
@@ -94,7 +93,7 @@
             android:layout_marginHorizontal="5dp"
             android:text="Batal"
             android:textSize="11sp"
-            android:visibility="visible"
+            android:visibility="gone"
             app:cornerRadius="10dp"
             app:layout_constraintBottom_toBottomOf="@+id/guideline_bottom"
             app:layout_constraintEnd_toEndOf="@id/ly_maps_bottom"
@@ -123,9 +122,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.75" />
+            app:layout_constraintGuide_begin="309dp" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>-->
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/map"
@@ -164,6 +163,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="1" />
+        app:layout_constraintGuide_end="200dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

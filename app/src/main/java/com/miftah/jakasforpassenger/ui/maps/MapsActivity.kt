@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.work.Constraints
 import androidx.work.Data.Builder
 import androidx.work.NetworkType
@@ -42,6 +43,7 @@ import com.miftah.jakasforpassenger.utils.Constants.MapObjective
 import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_COLOR
 import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_WIDTH
 import com.miftah.jakasforpassenger.utils.Constants.POSITION_LAT_LNG
+import com.miftah.jakasforpassenger.utils.Result
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import javax.inject.Inject
@@ -77,6 +79,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         mapFragment.getMapAsync(this)
 
         workManager = WorkManager.getInstance(this)
+
+        binding.rvDepartmentAngkot.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
     }
 
     @SuppressLint("MissingPermission")
@@ -89,13 +94,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         viewModel.pointDestination.observe(this) { data ->
             latLngDestination[MapObjective.DESTINATION.name] = data
             makeMarker(data, MapObjective.DESTINATION)
-            findRoute()
         }
 
         viewModel.pointPosition.observe(this) { data ->
             latLngDestination[MapObjective.POSITION.name] = data
             makeMarker(data, MapObjective.POSITION)
-            findRoute()
         }
 
         binding.btnFindPosition.setOnClickListener {
@@ -104,11 +107,45 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                     val latLng = LatLng(data.latitude, data.longitude)
                     viewModel.updatePoint(MapObjective.POSITION, latLng)
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, MAP_ZOOM))
-                }else {
+                } else {
                     Timber.d("Empty")
                 }
             }
         }
+
+        viewModel.isPointFilled.observe(this) {
+            if (it) {
+                findRoute()
+                val positionLatLng =
+                    "${latLngDestination[MapObjective.POSITION.name]?.latitude},${latLngDestination[MapObjective.POSITION.name]?.longitude}"
+                val destinationLatLng =
+                    "${latLngDestination[MapObjective.DESTINATION.name]?.latitude},${latLngDestination[MapObjective.DESTINATION.name]?.longitude}"
+                viewModel.findAngkotBaseOnPositionAndDestination(positionLatLng, destinationLatLng)
+                    .observe(this) { result ->
+                        val adapter = AngkotDepartmentAdapter(
+                            onClick = { angkot ->
+                                binding.tvPrice.text = angkot.price.toString()
+                            }
+                        )
+                        when (result) {
+                            is Result.Success -> {
+                                binding.progressBar.visibility = View.GONE
+                                adapter.submitList(result.data)
+                                binding.rvDepartmentAngkot.adapter = adapter
+                            }
+                            is Result.Loading -> {
+                                binding.progressBar.visibility = View.VISIBLE
+                            }
+                            is Result.Error -> {
+                                binding.progressBar.visibility = View.GONE
+                                Toast.makeText(this, result.error, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+            }
+        }
+
+
     }
 
     private fun setupAutoComplete() {
@@ -274,6 +311,5 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             it.action = action
             startService(it)
         }
-
 
 }

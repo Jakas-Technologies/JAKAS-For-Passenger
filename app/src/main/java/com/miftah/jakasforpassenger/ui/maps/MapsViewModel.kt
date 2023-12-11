@@ -18,11 +18,30 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
     private var _pointPosition = MutableLiveData<LatLng?>()
     val pointPosition: LiveData<LatLng?> = _pointPosition
 
+    private var _isPointFilled = MutableLiveData<Boolean>()
+    val isPointFilled: LiveData<Boolean> = _isPointFilled
+
     fun updatePoint(pointType: MapObjective, newValue: LatLng) {
         when (pointType) {
-            MapObjective.DESTINATION -> _pointDestination.value = newValue
-            MapObjective.POSITION -> _pointPosition.value = newValue
+            MapObjective.DESTINATION -> {
+                _pointDestination.value = newValue
+                checkPointIsFilled()
+            }
+
+            MapObjective.POSITION -> {
+                _pointPosition.value = newValue
+                checkPointIsFilled()
+            }
         }
     }
+
+    private fun checkPointIsFilled() {
+        _isPointFilled.value = (_pointPosition.value != null) && (_pointDestination.value != null)
+    }
+
+    fun findAngkotBaseOnPositionAndDestination(
+        position : String,
+        destination : String
+    ) = repository.findAngkotBaseOnPositionAndDestination(position,destination)
 
 }
