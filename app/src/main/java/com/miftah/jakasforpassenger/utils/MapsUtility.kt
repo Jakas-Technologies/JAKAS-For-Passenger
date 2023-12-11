@@ -4,7 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.os.Build
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.PolyUtil
+import com.google.android.gms.maps.model.Polyline
 import com.google.maps.model.DirectionsResult
 import com.vmadalin.easypermissions.EasyPermissions
 
@@ -25,14 +25,6 @@ object MapsUtility {
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION
             )
         }
-
-    fun isUserOnPath(
-        userLocation: LatLng,
-        polyline: List<LatLng>,
-        tolerance: Double = 20.0
-    ): Boolean {
-        return PolyUtil.isLocationOnPath(userLocation, polyline, true, tolerance)
-    }
 
     fun parseDirectionsResult(directionsResult: DirectionsResult): List<LatLng> {
         val path = mutableListOf<LatLng>()
@@ -80,5 +72,52 @@ object MapsUtility {
         }
 
         return poly
+    }
+
+    fun convertListLatLngToDouble(listOfLatLng: List<LatLng>): List<Double> {
+        val result = mutableListOf<Double>()
+        for (latLng in listOfLatLng) {
+            result.add(latLng.latitude)
+            result.add(latLng.longitude)
+        }
+        return result
+    }
+
+    fun convertListDoubleToLatLng(listOfDouble: List<Double>): List<LatLng> {
+        val result = mutableListOf<LatLng>()
+        for (i in listOfDouble.indices step 2) {
+            result.add(LatLng(listOfDouble[i], listOfDouble[i + 1]))
+        }
+        return result
+    }
+
+    fun convertListDoubleLatLongToLatLng(
+        latitudesDouble: List<Double>,
+        longitudesDouble: List<Double>
+    ): List<LatLng>? {
+        if (latitudesDouble.size != longitudesDouble.size) return null
+
+        /*        val latLngList = mutableListOf<LatLng>()
+
+                for (i in latitudesDouble.indices) {
+                    val latLng = LatLng(latitudesDouble[i], longitudesDouble[i])
+                    latLngList.add(latLng)
+                }*/
+
+        val latLngList = latitudesDouble.zip(longitudesDouble) { latitude, longitude ->
+            LatLng(latitude, longitude)
+        }
+
+        return latLngList
+    }
+
+    fun polylineToListLatLng(polyline: Polyline): List<LatLng> {
+        val points = polyline.points
+        val listLatLng = ArrayList<LatLng>(points.size)
+        for (i in points.indices) {
+            listLatLng.add(points[i])
+        }
+        return listLatLng
+
     }
 }

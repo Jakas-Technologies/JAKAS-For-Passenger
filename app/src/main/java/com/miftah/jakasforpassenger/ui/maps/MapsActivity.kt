@@ -113,39 +113,58 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             }
         }
 
-        viewModel.isPointFilled.observe(this) {
-            if (it) {
-                findRoute()
-                val positionLatLng =
-                    "${latLngDestination[MapObjective.POSITION.name]?.latitude},${latLngDestination[MapObjective.POSITION.name]?.longitude}"
-                val destinationLatLng =
-                    "${latLngDestination[MapObjective.DESTINATION.name]?.latitude},${latLngDestination[MapObjective.DESTINATION.name]?.longitude}"
-                viewModel.findAngkotBaseOnPositionAndDestination(positionLatLng, destinationLatLng)
-                    .observe(this) { result ->
-                        val adapter = AngkotDepartmentAdapter(
-                            onClick = { angkot ->
-                                binding.tvPrice.text = angkot.price.toString()
-                            }
-                        )
-                        when (result) {
-                            is Result.Success -> {
-                                binding.progressBar.visibility = View.GONE
-                                adapter.submitList(result.data)
-                                binding.rvDepartmentAngkot.adapter = adapter
-                            }
-                            is Result.Loading -> {
-                                binding.progressBar.visibility = View.VISIBLE
-                            }
-                            is Result.Error -> {
-                                binding.progressBar.visibility = View.GONE
-                                Toast.makeText(this, result.error, Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
+        viewModel.isPointFilled.observe(this) { isFilled ->
+            if (isFilled) {
+                showRv()
+                if (polylineRoute != null) {
+                    viewModel.isUserOnPath(
+                        latLngDestination[MapObjective.POSITION.name] as LatLng,
+                        latLngDestination[MapObjective.DESTINATION.name] as LatLng,
+                        polylineRoute as Polyline
+                    )
+                } else {
+                    findRoute()
+                }
             }
         }
 
+        viewModel.isOnPath.observe(this) { onPath ->
+            if (!onPath) {
+                findRoute()
+            }
+        }
 
+    }
+
+    private fun showRv() {
+        val positionLatLng =
+            "${latLngDestination[MapObjective.POSITION.name]?.latitude},${latLngDestination[MapObjective.POSITION.name]?.longitude}"
+        val destinationLatLng =
+            "${latLngDestination[MapObjective.DESTINATION.name]?.latitude},${latLngDestination[MapObjective.DESTINATION.name]?.longitude}"
+        viewModel.findAngkotBaseOnPositionAndDestination(positionLatLng, destinationLatLng)
+            .observe(this) { result ->
+                val adapter = AngkotDepartmentAdapter(
+                    onClick = { angkot ->
+                        binding.tvPrice.text = angkot.price.toString()
+                    }
+                )
+                when (result) {
+                    is Result.Success -> {
+                        binding.progressBar.visibility = View.GONE
+                        adapter.submitList(result.data)
+                        binding.rvDepartmentAngkot.adapter = adapter
+                    }
+
+                    is Result.Loading -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                    }
+
+                    is Result.Error -> {
+                        binding.progressBar.visibility = View.GONE
+                        Toast.makeText(this, result.error, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
     }
 
     private fun setupAutoComplete() {
@@ -243,7 +262,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     }
 
     private fun findRoute() {
-
         if (latLngDestination[MapObjective.POSITION.name] == null || latLngDestination[MapObjective.DESTINATION.name] == null) {
             return
         }
@@ -270,19 +288,51 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         workManager.enqueue(workRequest)
         workManager.getWorkInfoByIdLiveData(workRequest.id)
             .observe(this@MapsActivity) { workInfo ->
-                if (WorkInfo.State.ENQUEUED == workInfo.state) {
-                    binding.progressBar.visibility = View.VISIBLE
+/*                if (WorkInfo.State.ENQUEUED == workInfo.state) {
+
                 }
                 if (WorkInfo.State.SUCCEEDED == workInfo.state) {
                     binding.progressBar.visibility = View.GONE
                     FindRouteWorker.workRouteResult?.let {
                         drawRoute(it)
                     }
-                    Timber.d("success")
+
                 }
                 if (WorkInfo.State.FAILED == workInfo.state) {
-                    binding.progressBar.visibility = View.GONE
-                    Timber.d("Failed")
+
+                }*/
+                when (workInfo.state) {
+                    WorkInfo.State.ENQUEUED -> binding.progressBar.visibility = View.VISIBLE
+                    WorkInfo.State.RUNNING -> Timber.d("Work RUNNING")
+                    WorkInfo.State.SUCCEEDED -> {
+                        /*val outputData = workInfo.outputData
+                        val longitudes = outputData.getDoubleArray(KEY_DIRECTION_LONGITUDES)?.toList()
+                        val latitudes = outputData.getDoubleArray(KEY_DIRECTION_LATITUDES)?.toList()
+                        if (latitudes != null && longitudes != null) {
+                            val listLatLng = convertListDoubleLatLongToLatLng(latitudes, longitudes)
+                            if (listLatLng != null) {
+                                drawRouteLatLng(listLatLng)
+                            } else {
+                                Timber.d("Work empty")
+                            }
+                        } else {
+                            Timber.d("Work Send failed")
+                        }
+                        Timber.d("Work SUCCEEDED")*/
+                        binding.progressBar.visibility = View.GONE
+                        FindRouteWorker.workRouteResult?.let {
+                            drawRoute(it)
+                        }
+                        Timber.d("success")
+                    }
+
+                    WorkInfo.State.FAILED -> {
+                        binding.progressBar.visibility = View.GONE
+                        Timber.d("Work FAILED")
+                    }
+
+                    WorkInfo.State.BLOCKED -> Timber.d("Work BLOCKED")
+                    WorkInfo.State.CANCELLED -> Timber.d("Work CANCELLED")
                 }
             }
     }
@@ -300,6 +350,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
         val bounds = LatLngBounds.builder()
         for (point in decodedPath) {
+            bounds.include(point)
+        }
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 50))
+    }
+
+    private fun drawRouteLatLng(listLatLng: List<LatLng>) {
+        val polylineOptions = PolylineOptions()
+            .addAll(listLatLng)
+            .width(POLYLINE_WIDTH)
+            .color(POLYLINE_COLOR)
+
+        polylineRoute?.remove()
+
+        polylineRoute = mMap.addPolyline(polylineOptions)
+
+        val bounds = LatLngBounds.builder()
+        for (point in listLatLng) {
             bounds.include(point)
         }
 

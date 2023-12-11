@@ -42,6 +42,14 @@ class FindRouteWorker @AssistedInject constructor(
                 .destination(destination)
                 .mode(TravelMode.DRIVING)
                 .await()
+//            val listLatLng =  MapsUtility.parseDirectionsResult(workRouteResult)
+//            val listDouble = convertListLatLngToDouble(listLatLng)
+            /*            val latitudeList: List<Double> = listLatLng.map { it.latitude }
+                        val longitudeList: List<Double> = listLatLng.map { it.longitude }
+                        val outputData = workDataOf(
+                            KEY_DIRECTION_LONGITUDES to longitudeList.toTypedArray(),
+                            KEY_DIRECTION_LATITUDES to latitudeList.toTypedArray()
+                        )*/
             Result.success()
         } catch (e: ApiException) {
             Timber.e(e)
@@ -56,6 +64,6 @@ class FindRouteWorker @AssistedInject constructor(
     }
 
     companion object {
-        var workRouteResult : DirectionsResult? = null
+        var workRouteResult: DirectionsResult? = null
     }
 }
