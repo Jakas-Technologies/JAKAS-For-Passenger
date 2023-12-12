@@ -8,12 +8,6 @@ import android.os.Looper
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
-import androidx.work.Constraints
-import androidx.work.Data
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -21,7 +15,6 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.maps.model.LatLng
 import com.miftah.jakasforpassenger.R
-import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
 import com.miftah.jakasforpassenger.ui.maps.MapsActivity
 import com.miftah.jakasforpassenger.utils.Angkot
 import com.miftah.jakasforpassenger.utils.Constants
@@ -43,8 +36,6 @@ class LocationTrackerService : LifecycleService() {
 
     private var serviceKilled = false
 
-    private lateinit var workManager: WorkManager
-
     @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
@@ -56,13 +47,17 @@ class LocationTrackerService : LifecycleService() {
         val userPosition = MutableLiveData<LatLng>()
         val destinationPosition = MutableLiveData<LatLng>()
         val angkotPosition = MutableLiveData<List<LatLng>>()
+        val angkotChoice = MutableLiveData<Angkot>()
         val isTracking = MutableLiveData<Boolean>()
     }
 
     override fun onCreate() {
         super.onCreate()
-        workManager = WorkManager.getInstance(this)
+        postInitialValues()
 
+        isTracking.observe(this) {
+            updateLocationTracking(it)
+        }
     }
 
     @Suppress("DEPRECATION")
@@ -72,28 +67,41 @@ class LocationTrackerService : LifecycleService() {
                 ACTION_START_SERVICE -> {
                     if (Build.VERSION.SDK_INT >= 33) {
                         destinationPath = intent.getParcelableExtra(
-                            EXTRA_POSITION_SERIALIZABLE,
-                            SerializableLatLng::class.java
-                        )
-                        positionPath = intent.getParcelableExtra(
                             EXTRA_DESTINATION_SERIALIZABLE,
                             SerializableLatLng::class.java
                         )
-                        angkotDepartment =
-                            intent.getParcelableExtra(EXTRA_DEPARTMENT_ANGKOT, Angkot::class.java)
+                        positionPath = intent.getParcelableExtra(
+                            EXTRA_POSITION_SERIALIZABLE,
+                            SerializableLatLng::class.java
+                        )
+                        angkotDepartment = intent.getParcelableExtra(
+                            EXTRA_DEPARTMENT_ANGKOT,
+                            Angkot::class.java
+                        )
                     } else {
-                        destinationPath = intent.getParcelableExtra(EXTRA_POSITION_SERIALIZABLE)
-                        positionPath = intent.getParcelableExtra(EXTRA_DESTINATION_SERIALIZABLE)
+                        destinationPath = intent.getParcelableExtra(EXTRA_DESTINATION_SERIALIZABLE)
+                        positionPath = intent.getParcelableExtra(EXTRA_POSITION_SERIALIZABLE)
                         angkotDepartment = intent.getParcelableExtra(EXTRA_DEPARTMENT_ANGKOT)
                     }
+                    initTracking()
+                    startForegroundService()
+                    Timber.d("Start Service")
                 }
 
                 ACTION_STOP_SERVICE -> {
-                    Timber.d("stop service")
+                    Timber.d("Stop Service")
+                    killService()
                 }
             }
         }
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun killService() {
+        serviceKilled = true
+        postInitialValues()
+        stopForeground(true)
+        stopSelf()
     }
 
     private fun postInitialValues() {
@@ -103,19 +111,36 @@ class LocationTrackerService : LifecycleService() {
         isTracking.postValue(false)
     }
 
+    private fun initTracking() {
+        destinationPath?.let {
+            destinationPosition.postValue(LatLng(it.latitude, it.longitude))
+        }
+        positionPath?.let {
+            userPosition.postValue(LatLng(it.latitude, it.longitude))
+        }
+        angkotDepartment?.let {
+            angkotChoice.postValue(it)
+        }
+        isTracking.postValue(true)
+    }
+
     @SuppressLint("MissingPermission")
     private fun updateLocationTracking(isTracking: Boolean) {
         if (!MapsUtility.hasLocationPermissions(this)) return
-        val request = LocationRequest.create().apply {
-            interval = Constants.LOCATION_UPDATE_INTERVAL
-            fastestInterval = Constants.FASTEST_LOCATION_INTERVAL
-            priority = Priority.PRIORITY_HIGH_ACCURACY
+        if (isTracking) {
+            val request = LocationRequest.create().apply {
+                interval = Constants.LOCATION_UPDATE_INTERVAL
+                fastestInterval = Constants.FASTEST_LOCATION_INTERVAL
+                priority = Priority.PRIORITY_HIGH_ACCURACY
+            }
+            fusedLocationProviderClient.requestLocationUpdates(
+                request,
+                locationCallback,
+                Looper.getMainLooper()
+            )
+        } else {
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback)
         }
-        fusedLocationProviderClient.requestLocationUpdates(
-            request,
-            locationCallback,
-            Looper.getMainLooper()
-        )
     }
 
     private val locationCallback = object : LocationCallback() {
@@ -134,48 +159,49 @@ class LocationTrackerService : LifecycleService() {
         }
     }
 
-    private fun findDirectionPath() {
-        val positionLatLng = "${positionPath?.latitude},${positionPath?.longitude}"
-        val destinationLatLng = "${destinationPath?.latitude},${destinationPath?.longitude}"
+    /*    private fun findDirectionPath() {
+            val positionLatLng = "${positionPath?.latitude},${positionPath?.longitude}"
+            val destinationLatLng = "${destinationPath?.latitude},${destinationPath?.longitude}"
 
-        val data = Data.Builder()
-            .putString(Constants.POSITION_LAT_LNG, positionLatLng)
-            .putString(Constants.DESTINATION_LAT_LNG, destinationLatLng)
-            .build()
+            val data = Data.Builder()
+                .putString(Constants.POSITION_LAT_LNG, positionLatLng)
+                .putString(Constants.DESTINATION_LAT_LNG, destinationLatLng)
+                .build()
 
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
 
-        val workRequest = OneTimeWorkRequestBuilder<FindRouteWorker>()
-            .setInputData(data)
-            .setConstraints(constraints)
-            .build()
+            val workRequest = OneTimeWorkRequestBuilder<FindRouteWorker>()
+                .setInputData(data)
+                .setConstraints(constraints)
+                .build()
 
-        workManager.enqueue(workRequest)
-        workManager.getWorkInfoByIdLiveData(workRequest.id)
-            .observe(this) { workInfo ->
-                when (workInfo.state) {
-                    WorkInfo.State.ENQUEUED -> Timber.d("Work ENQUEUED")
-                    WorkInfo.State.RUNNING -> Timber.d("Work RUNNING")
-                    WorkInfo.State.SUCCEEDED -> {
-                        Timber.d("success")
-                        FindRouteWorker.workRouteResult?.let {
+            workManager.enqueue(workRequest)
+            workManager.getWorkInfoByIdLiveData(workRequest.id)
+                .observe(this) { workInfo ->
+                    when (workInfo.state) {
+                        WorkInfo.State.ENQUEUED -> Timber.d("Work ENQUEUED")
+                        WorkInfo.State.RUNNING -> Timber.d("Work RUNNING")
+                        WorkInfo.State.SUCCEEDED -> {
+                            Timber.d("success")
+                            FindRouteWorker.workRouteResult?.let {
 
+                            }
                         }
-                    }
 
-                    WorkInfo.State.FAILED -> {
-                        Timber.d("Work FAILED")
-                    }
+                        WorkInfo.State.FAILED -> {
+                            Timber.d("Work FAILED")
+                        }
 
-                    WorkInfo.State.BLOCKED -> Timber.d("Work BLOCKED")
-                    WorkInfo.State.CANCELLED -> Timber.d("Work CANCELLED")
+                        WorkInfo.State.BLOCKED -> Timber.d("Work BLOCKED")
+                        WorkInfo.State.CANCELLED -> Timber.d("Work CANCELLED")
+                    }
                 }
-            }
-    }
+        }*/
 
     private fun startForegroundService() {
+        isTracking.postValue(true)
         val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setAutoCancel(false)
             .setOngoing(true)

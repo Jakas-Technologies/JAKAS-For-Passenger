@@ -36,7 +36,12 @@ import com.miftah.jakasforpassenger.R
 import com.miftah.jakasforpassenger.core.services.LocationTrackerService
 import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
 import com.miftah.jakasforpassenger.databinding.ActivityMapsBinding
+import com.miftah.jakasforpassenger.utils.Angkot
+import com.miftah.jakasforpassenger.utils.Constants
 import com.miftah.jakasforpassenger.utils.Constants.DESTINATION_LAT_LNG
+import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DEPARTMENT_ANGKOT
+import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DESTINATION_SERIALIZABLE
+import com.miftah.jakasforpassenger.utils.Constants.EXTRA_POSITION_SERIALIZABLE
 import com.miftah.jakasforpassenger.utils.Constants.KEY_MAP
 import com.miftah.jakasforpassenger.utils.Constants.MAP_ZOOM
 import com.miftah.jakasforpassenger.utils.Constants.MapObjective
@@ -44,6 +49,7 @@ import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_COLOR
 import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_WIDTH
 import com.miftah.jakasforpassenger.utils.Constants.POSITION_LAT_LNG
 import com.miftah.jakasforpassenger.utils.Result
+import com.miftah.jakasforpassenger.utils.SerializableLatLng
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import javax.inject.Inject
@@ -60,6 +66,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
     private val latLngDestination: MutableMap<String, LatLng?> = mutableMapOf()
     private var polylineRoute: Polyline? = null
+    private var angkotChoice : Angkot? = null
 
     @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -82,6 +89,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
         binding.rvDepartmentAngkot.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+
+        binding.btnToggleFind.setOnClickListener {
+            sendCommandToService(Constants.ACTION_START_SERVICE)
+            binding.btnToggleCancel.visibility = View.VISIBLE
+            binding.btnToggleFind.visibility = View.GONE
+        }
+        binding.btnToggleCancel.setOnClickListener {
+            sendCommandToService(Constants.ACTION_STOP_SERVICE)
+            binding.btnToggleFind.visibility = View.VISIBLE
+            binding.btnToggleCancel.visibility = View.GONE
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -146,6 +164,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 val adapter = AngkotDepartmentAdapter(
                     onClick = { angkot ->
                         binding.tvPrice.text = angkot.price.toString()
+                        angkotChoice = angkot
                     }
                 )
                 when (result) {
@@ -374,10 +393,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 50))
     }
 
-    private fun sendCommandToService(action: String) =
+    private fun sendCommandToService(action: String) {
+        if (latLngDestination[MapObjective.POSITION.name] == null || latLngDestination[MapObjective.DESTINATION.name] == null || angkotChoice == null) {
+            return
+        }
+
+        val serializableDestination = SerializableLatLng(latLngDestination[MapObjective.DESTINATION.name]?.latitude as Double, latLngDestination[MapObjective.DESTINATION.name]?.longitude as Double)
+        val serializablePosition = SerializableLatLng(latLngDestination[MapObjective.DESTINATION.name]?.latitude as Double, latLngDestination[MapObjective.DESTINATION.name]?.longitude as Double)
         Intent(this, LocationTrackerService::class.java).let {
             it.action = action
+            it.putExtra(EXTRA_POSITION_SERIALIZABLE, serializablePosition)
+            it.putExtra(EXTRA_DESTINATION_SERIALIZABLE, serializableDestination)
+            it.putExtra(EXTRA_DEPARTMENT_ANGKOT, angkotChoice)
             startService(it)
         }
+    }
 
 }
