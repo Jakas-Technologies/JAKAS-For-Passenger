@@ -13,8 +13,9 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
-import com.google.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLng
 import com.miftah.jakasforpassenger.R
+import com.miftah.jakasforpassenger.core.data.source.remote.socket.SocketHandlerService
 import com.miftah.jakasforpassenger.ui.maps.MapsActivity
 import com.miftah.jakasforpassenger.utils.Angkot
 import com.miftah.jakasforpassenger.utils.Constants
@@ -38,6 +39,9 @@ class LocationTrackerService : LifecycleService() {
 
     @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+
+    @Inject
+    lateinit var socketHandlerService : SocketHandlerService
 
     private var destinationPath: SerializableLatLng? = null
     private var positionPath: SerializableLatLng? = null
@@ -99,14 +103,15 @@ class LocationTrackerService : LifecycleService() {
 
     private fun killService() {
         serviceKilled = true
+        socketHandlerService.closeConnection()
         postInitialValues()
         stopForeground(true)
         stopSelf()
     }
 
     private fun postInitialValues() {
-        userPosition.postValue(LatLng())
-        destinationPosition.postValue(LatLng())
+        userPosition.postValue(LatLng(0.0, 0.0))
+        destinationPosition.postValue(LatLng(0.0, 0.0))
         angkotPosition.postValue(mutableListOf())
         isTracking.postValue(false)
     }
@@ -120,8 +125,10 @@ class LocationTrackerService : LifecycleService() {
         }
         angkotDepartment?.let {
             angkotChoice.postValue(it)
+            socketHandlerService.initSession(it)
         }
         isTracking.postValue(true)
+
     }
 
     @SuppressLint("MissingPermission")
@@ -153,54 +160,18 @@ class LocationTrackerService : LifecycleService() {
                         location.longitude
                     )
                     userPosition.postValue(lastLatLng)
+                    socketHandlerService.sendUserPosition(lastLatLng)
+                    socketHandlerService.getAngkotPosition {
+                        Timber.d("what")
+                    }
                     Timber.d("NEW LOCATION: ${location.latitude}, ${location.longitude}")
                 }
             }
         }
     }
 
-    /*    private fun findDirectionPath() {
-            val positionLatLng = "${positionPath?.latitude},${positionPath?.longitude}"
-            val destinationLatLng = "${destinationPath?.latitude},${destinationPath?.longitude}"
-
-            val data = Data.Builder()
-                .putString(Constants.POSITION_LAT_LNG, positionLatLng)
-                .putString(Constants.DESTINATION_LAT_LNG, destinationLatLng)
-                .build()
-
-            val constraints = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build()
-
-            val workRequest = OneTimeWorkRequestBuilder<FindRouteWorker>()
-                .setInputData(data)
-                .setConstraints(constraints)
-                .build()
-
-            workManager.enqueue(workRequest)
-            workManager.getWorkInfoByIdLiveData(workRequest.id)
-                .observe(this) { workInfo ->
-                    when (workInfo.state) {
-                        WorkInfo.State.ENQUEUED -> Timber.d("Work ENQUEUED")
-                        WorkInfo.State.RUNNING -> Timber.d("Work RUNNING")
-                        WorkInfo.State.SUCCEEDED -> {
-                            Timber.d("success")
-                            FindRouteWorker.workRouteResult?.let {
-
-                            }
-                        }
-
-                        WorkInfo.State.FAILED -> {
-                            Timber.d("Work FAILED")
-                        }
-
-                        WorkInfo.State.BLOCKED -> Timber.d("Work BLOCKED")
-                        WorkInfo.State.CANCELLED -> Timber.d("Work CANCELLED")
-                    }
-                }
-        }*/
-
     private fun startForegroundService() {
+        socketHandlerService.establishConnection()
         isTracking.postValue(true)
         val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setAutoCancel(false)

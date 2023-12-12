@@ -8,6 +8,7 @@ object Dummy {
         for (i in 1..10) {
             angkots.add(
                 Angkot(
+                    id = i,
                     department = "$i",
                     price = i * 1000
                 )

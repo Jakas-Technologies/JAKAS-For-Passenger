@@ -2,10 +2,11 @@ package com.miftah.jakasforpassenger.core.data.source
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
-import com.miftah.jakasforpassenger.core.data.source.remote.request.LoginRequest
-import com.miftah.jakasforpassenger.core.data.source.remote.request.RegisterRequest
-import com.miftah.jakasforpassenger.core.data.source.remote.response.LoginResponse
-import com.miftah.jakasforpassenger.core.data.source.remote.response.RegisterResponse
+import com.google.android.gms.maps.model.LatLng
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.LoginRequest
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.RegisterRequest
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.LoginResponse
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.RegisterResponse
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiService
 import com.miftah.jakasforpassenger.core.dummy.Dummy
 import com.miftah.jakasforpassenger.utils.Angkot
@@ -47,19 +48,10 @@ class AppRepository @Inject constructor(
         }
     }
 
-    // TODO send to CC angkot pilihan
-    fun sendAngkotBaseUserInterest(
-        angkot: Angkot
-    ): LiveData<Result<Boolean>> = liveData {
-        emit(Result.Loading)
-        delay(500L)
-        emit(Result.Success(true))
-    }
-
     // TODO fetch from CC angkot apa saja
     fun findAngkotBaseOnPositionAndDestination(
-        position: String,
-        destination: String
+        position: LatLng,
+        destination: LatLng
     ): LiveData<Result<List<Angkot>>> = liveData {
         emit(Result.Loading)
         delay(500L)

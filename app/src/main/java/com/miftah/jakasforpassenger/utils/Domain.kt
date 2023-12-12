@@ -11,6 +11,7 @@ data class SerializableLatLng(
 
 @Parcelize
 data class Angkot(
+    val id : Int,
     val department: String,
     val price : Int
 ) : Parcelable

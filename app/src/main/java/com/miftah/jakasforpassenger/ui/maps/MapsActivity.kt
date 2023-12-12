@@ -155,11 +155,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     }
 
     private fun showRv() {
-        val positionLatLng =
+/*        val positionLatLng =
             "${latLngDestination[MapObjective.POSITION.name]?.latitude},${latLngDestination[MapObjective.POSITION.name]?.longitude}"
         val destinationLatLng =
-            "${latLngDestination[MapObjective.DESTINATION.name]?.latitude},${latLngDestination[MapObjective.DESTINATION.name]?.longitude}"
-        viewModel.findAngkotBaseOnPositionAndDestination(positionLatLng, destinationLatLng)
+            "${latLngDestination[MapObjective.DESTINATION.name]?.latitude},${latLngDestination[MapObjective.DESTINATION.name]?.longitude}"*/
+        viewModel.findAngkotBaseOnPositionAndDestination(latLngDestination[MapObjective.POSITION.name] as LatLng, latLngDestination[MapObjective.DESTINATION.name] as LatLng)
             .observe(this) { result ->
                 val adapter = AngkotDepartmentAdapter(
                     onClick = { angkot ->
@@ -182,6 +182,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                         binding.progressBar.visibility = View.GONE
                         Toast.makeText(this, result.error, Toast.LENGTH_SHORT).show()
                     }
+
+                    else -> {}
                 }
             }
     }
@@ -404,7 +406,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             it.action = action
             it.putExtra(EXTRA_POSITION_SERIALIZABLE, serializablePosition)
             it.putExtra(EXTRA_DESTINATION_SERIALIZABLE, serializableDestination)
-            it.putExtra(EXTRA_DEPARTMENT_ANGKOT, angkotChoice)
+            it.putExtra(EXTRA_DEPARTMENT_ANGKOT, angkotChoice as Angkot)
             startService(it)
         }
     }

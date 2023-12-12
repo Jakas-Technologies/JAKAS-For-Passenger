@@ -1,9 +1,9 @@
 package com.miftah.jakasforpassenger.core.data.source.remote.retrofit
 
-import com.miftah.jakasforpassenger.core.data.source.remote.request.LoginRequest
-import com.miftah.jakasforpassenger.core.data.source.remote.request.RegisterRequest
-import com.miftah.jakasforpassenger.core.data.source.remote.response.LoginResponse
-import com.miftah.jakasforpassenger.core.data.source.remote.response.RegisterResponse
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.LoginRequest
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.RegisterRequest
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.LoginResponse
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.RegisterResponse
 import javax.inject.Inject
 
 class ApiServiceImpl @Inject constructor(

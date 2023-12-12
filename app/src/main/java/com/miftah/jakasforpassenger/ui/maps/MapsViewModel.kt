@@ -46,8 +46,8 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
     }
 
     fun findAngkotBaseOnPositionAndDestination(
-        position: String,
-        destination: String
+        position: LatLng,
+        destination: LatLng
     ) = repository.findAngkotBaseOnPositionAndDestination(position, destination)
 
     fun isUserOnPath(
@@ -56,10 +56,6 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
         polyline: Polyline,
         tolerance: Double = 10.0
     ) {
-//        val points = polyline.points
-//        val path = PolyUtil.decode(polyline.id)
-
-//        val result = PolyUtil.isLocationOnPath(userLocation, polyline, true, tolerance)
         val listLng = polylineToListLatLng(polyline)
 
         val resultUser =
