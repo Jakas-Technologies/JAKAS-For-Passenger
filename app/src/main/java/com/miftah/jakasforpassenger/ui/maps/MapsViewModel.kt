@@ -27,6 +27,9 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
     private var _isOnPath = MutableLiveData<Boolean>()
     val isOnPath: LiveData<Boolean> = _isOnPath
 
+    private var _userPosition = MutableLiveData<LatLng>()
+    val userPosition: LiveData<LatLng> = _userPosition
+
     fun updatePoint(pointType: MapObjective, newValue: LatLng) {
         when (pointType) {
             MapObjective.DESTINATION -> {
@@ -41,6 +44,12 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
         }
     }
 
+    fun updateUserPosition(newValue: LatLng?) {
+        newValue?.let {
+            _userPosition.postValue(it)
+        }
+    }
+
     private fun checkPointIsFilled() {
         _isPointFilled.value = (_pointPosition.value != null) && (_pointDestination.value != null)
     }
@@ -52,17 +61,12 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
 
     fun isUserOnPath(
         userLocation: LatLng,
-        positionLocation: LatLng,
         polyline: Polyline,
         tolerance: Double = 10.0
     ) {
         val listLng = polylineToListLatLng(polyline)
-
-        val resultUser =
-            PolyUtil.isLocationOnPath(userLocation, listLng, false, tolerance)
-        val resultDestination =
-            PolyUtil.isLocationOnPath(positionLocation, listLng, false, tolerance)
-
-        _isOnPath.postValue(resultUser && resultDestination)
+        val resultUser = PolyUtil.isLocationOnPath(userLocation, listLng, false, tolerance)
+//        if (!resultUser) _pointPosition.postValue(userLocation)
+        _isOnPath.postValue(resultUser)
     }
 }

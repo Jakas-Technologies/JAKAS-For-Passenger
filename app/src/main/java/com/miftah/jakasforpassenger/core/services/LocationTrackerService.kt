@@ -52,8 +52,9 @@ class LocationTrackerService : LifecycleService() {
     companion object {
         val userPosition = MutableLiveData<LatLng>()
         val destinationPosition = MutableLiveData<LatLng>()
-        val angkotPosition = MutableLiveData<List<LatLng>>()
+        val realtimeUserPosition = MutableLiveData<LatLng>()
         val angkotChoice = MutableLiveData<Angkot>()
+        val angkotPosition = MutableLiveData<List<LatLng>>()
         val isTracking = MutableLiveData<Boolean>()
     }
 
@@ -89,6 +90,7 @@ class LocationTrackerService : LifecycleService() {
                         positionPath = intent.getParcelableExtra(EXTRA_POSITION_SERIALIZABLE)
                         angkotDepartment = intent.getParcelableExtra(EXTRA_DEPARTMENT_ANGKOT)
                     }
+                    postInitialValues()
                     initTracking()
                     startForegroundService()
                     Timber.d("Start Service")
@@ -114,6 +116,7 @@ class LocationTrackerService : LifecycleService() {
     private fun postInitialValues() {
         userPosition.postValue(LatLng(0.0, 0.0))
         destinationPosition.postValue(LatLng(0.0, 0.0))
+        realtimeUserPosition.postValue(LatLng(0.0, 0.0))
         angkotPosition.postValue(mutableListOf())
         isTracking.postValue(false)
     }
@@ -159,11 +162,11 @@ class LocationTrackerService : LifecycleService() {
                         location.latitude,
                         location.longitude
                     )
-                    userPosition.postValue(lastLatLng)
+                    realtimeUserPosition.postValue(lastLatLng)
                     socketHandlerService.sendUserPosition(lastLatLng)
-                    socketHandlerService.getAngkotPosition {
+/*                    socketHandlerService.getAngkotPosition {
                         Timber.d("what")
-                    }
+                    }*/
                     Timber.d("NEW LOCATION: ${location.latitude}, ${location.longitude}")
                 }
             }

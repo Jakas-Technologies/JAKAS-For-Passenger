@@ -20,6 +20,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
@@ -65,16 +66,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     private lateinit var autoCompleteDestination: AutocompleteSupportFragment
 
     private val latLngDestination: MutableMap<String, LatLng?> = mutableMapOf()
-    private var polylineRoute: Polyline? = null
     private var angkotChoice: Angkot? = null
+    private var polylineRoute: Polyline? = null
 
-    private val serviceOn = false
+    private var userPosition: LatLng = LatLng(0.0, 0.0)
+
+    private var serviceOn = false
 
     @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
     private var markerDestination: Marker? = null
     private var markerPosition: Marker? = null
+    private var markerUser: Marker? = null
 
     private lateinit var workManager: WorkManager
 
@@ -94,11 +98,52 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
         binding.btnToggleFind.setOnClickListener {
             sendCommandToService(Constants.ACTION_START_SERVICE)
-            binding.btnToggleCancel.visibility = View.VISIBLE
-            binding.btnToggleFind.visibility = View.GONE
         }
         binding.btnToggleCancel.setOnClickListener {
             sendCommandToService(Constants.ACTION_STOP_SERVICE)
+        }
+
+        subscribeToObservers()
+    }
+
+    private fun subscribeToObservers() {
+        LocationTrackerService.isTracking.observe(this) { isTracking ->
+            isServiceTracking(isTracking)
+        }
+        LocationTrackerService.angkotPosition.observe(this) { allAngkotPosition ->
+            if (serviceOn) {
+
+            }
+        }
+        LocationTrackerService.userPosition.observe(this) { userLastPosition ->
+            if (serviceOn) {
+                userPosition = userLastPosition
+                polylineRoute?.let {
+                    viewModel.isUserOnPath(userLastPosition, it)
+                }
+                val camera = CameraPosition.builder()
+                    .target(userLastPosition)
+                    .zoom(MAP_ZOOM)
+                    .build()
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camera), 100, null)
+            }
+        }
+        LocationTrackerService.realtimeUserPosition.observe(this) { realtimePosition ->
+            if (serviceOn) {
+                viewModel.updateUserPosition(realtimePosition)
+                polylineRoute?.let {
+                    viewModel.isUserOnPath(realtimePosition, it)
+                }
+            }
+        }
+    }
+
+    private fun isServiceTracking(tracking: Boolean) {
+        this.serviceOn = tracking
+        if (serviceOn) {
+            binding.btnToggleCancel.visibility = View.VISIBLE
+            binding.btnToggleFind.visibility = View.GONE
+        } else {
             binding.btnToggleFind.visibility = View.VISIBLE
             binding.btnToggleCancel.visibility = View.GONE
         }
@@ -136,7 +181,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         viewModel.isPointFilled.observe(this) { isFilled ->
             if (isFilled) {
                 showRv()
-                if (polylineRoute != null) {
+                findRoute()
+                /*if (polylineRoute != null) {
                     viewModel.isUserOnPath(
                         latLngDestination[MapObjective.POSITION.name] as LatLng,
                         latLngDestination[MapObjective.DESTINATION.name] as LatLng,
@@ -144,14 +190,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                     )
                 } else {
                     findRoute()
-                }
+                }*/
             }
         }
 
         viewModel.isOnPath.observe(this) { onPath ->
             if (!onPath) {
+//                latLngDestination[MapObjective.POSITION.name] = userPosition
                 findRoute()
             }
+        }
+
+        viewModel.userPosition.observe(this) {data ->
+            markerUser?.remove()
+            markerUser = mMap.addMarker(MarkerOptions().position(data).title("USER"))
+            Timber.d("onMapReady: $data")
         }
 
     }
@@ -160,33 +213,32 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         viewModel.findAngkotBaseOnPositionAndDestination(
             latLngDestination[MapObjective.POSITION.name] as LatLng,
             latLngDestination[MapObjective.DESTINATION.name] as LatLng
-        )
-            .observe(this) { result ->
-                val adapter = AngkotDepartmentAdapter(
-                    onClick = { angkot ->
-                        binding.tvPrice.text = angkot.price.toString()
-                        angkotChoice = angkot
-                    }
-                )
-                when (result) {
-                    is Result.Success -> {
-                        binding.progressBar.visibility = View.GONE
-                        adapter.submitList(result.data)
-                        binding.rvDepartmentAngkot.adapter = adapter
-                    }
-
-                    is Result.Loading -> {
-                        binding.progressBar.visibility = View.VISIBLE
-                    }
-
-                    is Result.Error -> {
-                        binding.progressBar.visibility = View.GONE
-                        Toast.makeText(this, result.error, Toast.LENGTH_SHORT).show()
-                    }
-
-                    else -> {}
+        ).observe(this) { result ->
+            val adapter = AngkotDepartmentAdapter(
+                onClick = { angkot ->
+                    binding.tvPrice.text = angkot.price.toString()
+                    angkotChoice = angkot
                 }
+            )
+            when (result) {
+                is Result.Success -> {
+                    binding.progressBar.visibility = View.GONE
+                    adapter.submitList(result.data)
+                    binding.rvDepartmentAngkot.adapter = adapter
+                }
+
+                is Result.Loading -> {
+                    binding.progressBar.visibility = View.VISIBLE
+                }
+
+                is Result.Error -> {
+                    binding.progressBar.visibility = View.GONE
+                    Toast.makeText(this, result.error, Toast.LENGTH_SHORT).show()
+                }
+
+                else -> {}
             }
+        }
     }
 
     private fun setupAutoComplete() {
