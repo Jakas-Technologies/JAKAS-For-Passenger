@@ -66,7 +66,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
     private val latLngDestination: MutableMap<String, LatLng?> = mutableMapOf()
     private var polylineRoute: Polyline? = null
-    private var angkotChoice : Angkot? = null
+    private var angkotChoice: Angkot? = null
+
+    private val serviceOn = false
 
     @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -100,6 +102,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             binding.btnToggleFind.visibility = View.VISIBLE
             binding.btnToggleCancel.visibility = View.GONE
         }
+        mMap.
     }
 
     @SuppressLint("MissingPermission")
@@ -155,11 +158,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     }
 
     private fun showRv() {
-/*        val positionLatLng =
-            "${latLngDestination[MapObjective.POSITION.name]?.latitude},${latLngDestination[MapObjective.POSITION.name]?.longitude}"
-        val destinationLatLng =
-            "${latLngDestination[MapObjective.DESTINATION.name]?.latitude},${latLngDestination[MapObjective.DESTINATION.name]?.longitude}"*/
-        viewModel.findAngkotBaseOnPositionAndDestination(latLngDestination[MapObjective.POSITION.name] as LatLng, latLngDestination[MapObjective.DESTINATION.name] as LatLng)
+        viewModel.findAngkotBaseOnPositionAndDestination(
+            latLngDestination[MapObjective.POSITION.name] as LatLng,
+            latLngDestination[MapObjective.DESTINATION.name] as LatLng
+        )
             .observe(this) { result ->
                 val adapter = AngkotDepartmentAdapter(
                     onClick = { angkot ->
@@ -261,22 +263,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         latLng ?: return
         when (markerName) {
             MapObjective.DESTINATION -> {
-                markerPosition = if (markerPosition == null) {
+                markerPosition?.remove()
+                markerPosition =
                     mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
-                } else {
-                    markerPosition?.remove()
-                    mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
-                }
                 Timber.d("onMapReady: ${latLngDestination[markerName.name]}")
             }
 
             MapObjective.POSITION -> {
-                markerDestination = if (markerDestination == null) {
+                markerDestination?.remove()
+                markerDestination =
                     mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
-                } else {
-                    markerDestination?.remove()
-                    mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
-                }
                 Timber.d("onMapReady: ${latLngDestination[markerName.name]}")
             }
         }
@@ -400,8 +396,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             return
         }
 
-        val serializableDestination = SerializableLatLng(latLngDestination[MapObjective.DESTINATION.name]?.latitude as Double, latLngDestination[MapObjective.DESTINATION.name]?.longitude as Double)
-        val serializablePosition = SerializableLatLng(latLngDestination[MapObjective.DESTINATION.name]?.latitude as Double, latLngDestination[MapObjective.DESTINATION.name]?.longitude as Double)
+        val serializableDestination = SerializableLatLng(
+            latLngDestination[MapObjective.DESTINATION.name]?.latitude as Double,
+            latLngDestination[MapObjective.DESTINATION.name]?.longitude as Double
+        )
+        val serializablePosition = SerializableLatLng(
+            latLngDestination[MapObjective.DESTINATION.name]?.latitude as Double,
+            latLngDestination[MapObjective.DESTINATION.name]?.longitude as Double
+        )
         Intent(this, LocationTrackerService::class.java).let {
             it.action = action
             it.putExtra(EXTRA_POSITION_SERIALIZABLE, serializablePosition)

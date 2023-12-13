@@ -14,7 +14,9 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
+import com.google.gson.Gson
 import com.miftah.jakasforpassenger.R
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.GeoGamma
 import com.miftah.jakasforpassenger.core.data.source.remote.socket.SocketHandlerService
 import com.miftah.jakasforpassenger.ui.maps.MapsActivity
 import com.miftah.jakasforpassenger.utils.Angkot
@@ -41,7 +43,7 @@ class LocationTrackerService : LifecycleService() {
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
     @Inject
-    lateinit var socketHandlerService : SocketHandlerService
+    lateinit var socketHandlerService: SocketHandlerService
 
     private var destinationPath: SerializableLatLng? = null
     private var positionPath: SerializableLatLng? = null
@@ -127,8 +129,6 @@ class LocationTrackerService : LifecycleService() {
             angkotChoice.postValue(it)
             socketHandlerService.initSession(it)
         }
-        isTracking.postValue(true)
-
     }
 
     @SuppressLint("MissingPermission")
@@ -181,6 +181,14 @@ class LocationTrackerService : LifecycleService() {
             .setContentIntent(pendingIntent())
 
         startForeground(NOTIFICATION_ID, notificationBuilder.build())
+    }
+
+    private fun getAllAngkotDirection() {
+        socketHandlerService.getAngkotPosition { jsonDataList ->
+            jsonDataList.forEach { jsonData ->
+                val geoJson = Gson().fromJson(jsonData, GeoGamma::class.java)
+            }
+        }
     }
 
     private fun pendingIntent(): PendingIntent {
