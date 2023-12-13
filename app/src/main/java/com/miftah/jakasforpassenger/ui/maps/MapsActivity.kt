@@ -102,7 +102,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             binding.btnToggleFind.visibility = View.VISIBLE
             binding.btnToggleCancel.visibility = View.GONE
         }
-        mMap.
     }
 
     @SuppressLint("MissingPermission")
@@ -305,37 +304,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         workManager.enqueue(workRequest)
         workManager.getWorkInfoByIdLiveData(workRequest.id)
             .observe(this@MapsActivity) { workInfo ->
-/*                if (WorkInfo.State.ENQUEUED == workInfo.state) {
-
-                }
-                if (WorkInfo.State.SUCCEEDED == workInfo.state) {
-                    binding.progressBar.visibility = View.GONE
-                    FindRouteWorker.workRouteResult?.let {
-                        drawRoute(it)
-                    }
-
-                }
-                if (WorkInfo.State.FAILED == workInfo.state) {
-
-                }*/
                 when (workInfo.state) {
                     WorkInfo.State.ENQUEUED -> binding.progressBar.visibility = View.VISIBLE
                     WorkInfo.State.RUNNING -> Timber.d("Work RUNNING")
                     WorkInfo.State.SUCCEEDED -> {
-                        /*val outputData = workInfo.outputData
-                        val longitudes = outputData.getDoubleArray(KEY_DIRECTION_LONGITUDES)?.toList()
-                        val latitudes = outputData.getDoubleArray(KEY_DIRECTION_LATITUDES)?.toList()
-                        if (latitudes != null && longitudes != null) {
-                            val listLatLng = convertListDoubleLatLongToLatLng(latitudes, longitudes)
-                            if (listLatLng != null) {
-                                drawRouteLatLng(listLatLng)
-                            } else {
-                                Timber.d("Work empty")
-                            }
-                        } else {
-                            Timber.d("Work Send failed")
-                        }
-                        Timber.d("Work SUCCEEDED")*/
                         binding.progressBar.visibility = View.GONE
                         FindRouteWorker.workRouteResult?.let {
                             drawRoute(it)
@@ -367,24 +339,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
         val bounds = LatLngBounds.builder()
         for (point in decodedPath) {
-            bounds.include(point)
-        }
-
-        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 50))
-    }
-
-    private fun drawRouteLatLng(listLatLng: List<LatLng>) {
-        val polylineOptions = PolylineOptions()
-            .addAll(listLatLng)
-            .width(POLYLINE_WIDTH)
-            .color(POLYLINE_COLOR)
-
-        polylineRoute?.remove()
-
-        polylineRoute = mMap.addPolyline(polylineOptions)
-
-        val bounds = LatLngBounds.builder()
-        for (point in listLatLng) {
             bounds.include(point)
         }
 
