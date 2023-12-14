@@ -114,11 +114,11 @@ class LocationTrackerService : LifecycleService() {
     }
 
     private fun postInitialValues() {
+        isTracking.postValue(false)
         userPosition.postValue(LatLng(0.0, 0.0))
         destinationPosition.postValue(LatLng(0.0, 0.0))
         realtimeUserPosition.postValue(LatLng(0.0, 0.0))
         angkotPosition.postValue(mutableListOf())
-        isTracking.postValue(false)
     }
 
     private fun initTracking() {

@@ -1,7 +1,9 @@
 package com.miftah.jakasforpassenger.core.data.source.remote.dto.response
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class GeoGamma(
 
 	@field:SerializedName("id")
@@ -11,6 +13,7 @@ data class GeoGamma(
 	val coords: Coords
 )
 
+@Serializable
 data class Coords(
 
 	@field:SerializedName("altitude")

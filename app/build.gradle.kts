@@ -5,6 +5,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    kotlin("plugin.serialization") version "1.9.21"
 }
 
 android {
@@ -45,6 +46,9 @@ android {
 }
 
 dependencies {
+    //
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
     // Socket
     implementation("io.socket:socket.io-client:2.0.0") {
         exclude(group = "org.json", module = "json")

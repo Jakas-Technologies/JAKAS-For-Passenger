@@ -205,6 +205,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             markerUser?.remove()
             markerUser = mMap.addMarker(MarkerOptions().position(data).title("USER"))
             Timber.d("onMapReady: $data")
+            val camera = CameraPosition.builder()
+                .target(data)
+                .zoom(MAP_ZOOM)
+                .build()
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camera), 100, null)
         }
 
     }
@@ -393,8 +398,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         for (point in decodedPath) {
             bounds.include(point)
         }
-
-        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 50))
+        if(!serviceOn) mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 50))
     }
 
     private fun sendCommandToService(action: String) {

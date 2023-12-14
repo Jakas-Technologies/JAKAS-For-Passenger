@@ -1,15 +1,14 @@
 package com.miftah.jakasforpassenger.core.data.source.remote.socket
 
 import com.google.android.gms.maps.model.LatLng
+import com.google.gson.Gson
 import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.Coords
 import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.GeoGamma
-import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.GeoJSON
-import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.Geometry
-import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.Properties
 import com.miftah.jakasforpassenger.utils.Angkot
 import com.miftah.jakasforpassenger.utils.Resource
 import io.socket.client.IO
 import io.socket.client.Socket
+import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -19,9 +18,9 @@ class SocketHandlerImpl @Inject constructor() : SocketHandlerService {
 
     override fun initSession(angkotDepartment: Angkot): Resource<Unit> {
         return try {
-            val token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZmlyc3ROYW1lIjoiZ2FtbWEiLCJsYXN0TmFtZSI6InJpenF1aGEiLCJlbWFpbCI6ImdhbW1hQGVtYWlsLmNvbSIsInBhc3N3b3JkIjoid29yZCIsImNyZWF0ZWRBdCI6IjIwMjMtMTItMTJUMTE6MTE6MzAuNDMxWiIsInVwZGF0ZWRBdCI6IjIwMjMtMTItMTJUMTE6MTE6MzAuNDMxWiIsImlhdCI6MTcwMjM5NTExM30.Yd0Y2Y45L0IsLrSMouC22ov3WRj6Ls3MHi2vs7Qbins"
+            val token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZmlyc3ROYW1lIjoiZ2FtbWEiLCJsYXN0TmFtZSI6InJpenF1aGEiLCJlbWFpbCI6ImdhbW1hQGVtYWlsLmNvbSIsInJvbGUiOiJ1c2VyIiwicGFzc3dvcmQiOiJ3b3JkIiwiY3JlYXRlZEF0IjoiMjAyMy0xMi0xM1QxNTo1MTozMi44NzVaIiwidXBkYXRlZEF0IjoiMjAyMy0xMi0xM1QxNTo1MTozMi44NzVaIiwiaWF0IjoxNzAyNDgyNzk1fQ.Ad_KUePAh1c9AF5wRgR1wfQG_DlyTVDd1_SBsn7aj1k"
             val option = IO.Options.builder().setExtraHeaders(mapOf("auth" to listOf("Bearer $token"))).build()
-            socket = IO.socket("http://34.128.67.252:3000/",option)
+            socket = IO.socket("http://34.128.115.212:3000/",option)
             if (socket?.isActive == true) {
                 Timber.d("Connect")
                 Resource.Success(Unit)
@@ -56,12 +55,12 @@ class SocketHandlerImpl @Inject constructor() : SocketHandlerService {
     * */
 
     override fun sendUserPosition(userPosition: LatLng) {
-        val position = listOf(userPosition.latitude, userPosition.latitude)
+/*        val position = listOf(userPosition.latitude, userPosition.latitude)
         val data = GeoJSON(
             geometry = Geometry(position, "Point"),
             type = "User Position",
             properties = Properties("User Destination")
-        )
+        )*/
         val jsonObject = GeoGamma(
             id = 1,
             coords = Coords(
@@ -76,7 +75,10 @@ class SocketHandlerImpl @Inject constructor() : SocketHandlerService {
         )
 
         Timber.d("Share Loc")
-        socket?.emit("user-move", jsonObject)
+//        val data = Json.encodeToString(jsonObject)
+        val gson = Gson()
+        val data = JSONObject(gson.toJson(jsonObject))
+        socket?.emit("user-move", data)
     }
 
     override fun establishConnection() {

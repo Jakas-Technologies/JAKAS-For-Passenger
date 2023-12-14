@@ -66,7 +66,7 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
     ) {
         val listLng = polylineToListLatLng(polyline)
         val resultUser = PolyUtil.isLocationOnPath(userLocation, listLng, false, tolerance)
-//        if (!resultUser) _pointPosition.postValue(userLocation)
+        if (!resultUser) _pointPosition.postValue(userLocation)
         _isOnPath.postValue(resultUser)
     }
 }
