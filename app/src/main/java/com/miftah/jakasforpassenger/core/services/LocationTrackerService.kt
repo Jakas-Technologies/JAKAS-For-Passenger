@@ -14,10 +14,8 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
-import com.google.gson.Gson
 import com.miftah.jakasforpassenger.R
-import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.GeoGamma
-import com.miftah.jakasforpassenger.core.data.source.remote.socket.SocketHandlerService
+import com.miftah.jakasforpassenger.core.data.source.remote.socket.SocketUserPositionHandlerService
 import com.miftah.jakasforpassenger.ui.maps.MapsActivity
 import com.miftah.jakasforpassenger.utils.Angkot
 import com.miftah.jakasforpassenger.utils.Constants
@@ -43,7 +41,7 @@ class LocationTrackerService : LifecycleService() {
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
     @Inject
-    lateinit var socketHandlerService: SocketHandlerService
+    lateinit var socketUserPositionHandlerService: SocketUserPositionHandlerService
 
     private var destinationPath: SerializableLatLng? = null
     private var positionPath: SerializableLatLng? = null
@@ -51,9 +49,7 @@ class LocationTrackerService : LifecycleService() {
 
     companion object {
         val userPosition = MutableLiveData<LatLng>()
-        val destinationPosition = MutableLiveData<LatLng>()
         val realtimeUserPosition = MutableLiveData<LatLng>()
-        val angkotChoice = MutableLiveData<Angkot>()
         val angkotPosition = MutableLiveData<List<LatLng>>()
         val isTracking = MutableLiveData<Boolean>()
     }
@@ -107,7 +103,7 @@ class LocationTrackerService : LifecycleService() {
 
     private fun killService() {
         serviceKilled = true
-        socketHandlerService.closeConnection()
+        socketUserPositionHandlerService.closeConnection()
         postInitialValues()
         stopForeground(true)
         stopSelf()
@@ -116,22 +112,15 @@ class LocationTrackerService : LifecycleService() {
     private fun postInitialValues() {
         isTracking.postValue(false)
         userPosition.postValue(LatLng(0.0, 0.0))
-        destinationPosition.postValue(LatLng(0.0, 0.0))
         realtimeUserPosition.postValue(LatLng(0.0, 0.0))
         angkotPosition.postValue(mutableListOf())
     }
 
     private fun initTracking() {
-        destinationPath?.let {
-            destinationPosition.postValue(LatLng(it.latitude, it.longitude))
-        }
         positionPath?.let {
             userPosition.postValue(LatLng(it.latitude, it.longitude))
         }
-        angkotDepartment?.let {
-            angkotChoice.postValue(it)
-            socketHandlerService.initSession(it)
-        }
+        socketUserPositionHandlerService.initSession()
     }
 
     @SuppressLint("MissingPermission")
@@ -163,10 +152,7 @@ class LocationTrackerService : LifecycleService() {
                         location.longitude
                     )
                     realtimeUserPosition.postValue(lastLatLng)
-                    socketHandlerService.sendUserPosition(lastLatLng)
-/*                    socketHandlerService.getAngkotPosition {
-                        Timber.d("what")
-                    }*/
+                    socketUserPositionHandlerService.sendUserPosition(lastLatLng)
                     Timber.d("NEW LOCATION: ${location.latitude}, ${location.longitude}")
                 }
             }
@@ -174,7 +160,6 @@ class LocationTrackerService : LifecycleService() {
     }
 
     private fun startForegroundService() {
-        socketHandlerService.establishConnection()
         isTracking.postValue(true)
         val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setAutoCancel(false)
@@ -184,14 +169,6 @@ class LocationTrackerService : LifecycleService() {
             .setContentIntent(pendingIntent())
 
         startForeground(NOTIFICATION_ID, notificationBuilder.build())
-    }
-
-    private fun getAllAngkotDirection() {
-        socketHandlerService.getAngkotPosition { jsonDataList ->
-            jsonDataList.forEach { jsonData ->
-                val geoJson = Gson().fromJson(jsonData, GeoGamma::class.java)
-            }
-        }
     }
 
     private fun pendingIntent(): PendingIntent {

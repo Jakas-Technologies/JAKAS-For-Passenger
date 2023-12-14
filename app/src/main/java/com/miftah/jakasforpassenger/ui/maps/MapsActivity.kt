@@ -182,21 +182,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             if (isFilled) {
                 showRv()
                 findRoute()
-                /*if (polylineRoute != null) {
-                    viewModel.isUserOnPath(
-                        latLngDestination[MapObjective.POSITION.name] as LatLng,
-                        latLngDestination[MapObjective.DESTINATION.name] as LatLng,
-                        polylineRoute as Polyline
-                    )
-                } else {
-                    findRoute()
-                }*/
             }
         }
 
         viewModel.isOnPath.observe(this) { onPath ->
             if (!onPath) {
-//                latLngDestination[MapObjective.POSITION.name] = userPosition
                 findRoute()
             }
         }
@@ -320,15 +310,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         when (markerName) {
             MapObjective.DESTINATION -> {
                 markerPosition?.remove()
-                markerPosition =
-                    mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
+                markerPosition = mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
                 Timber.d("onMapReady: ${latLngDestination[markerName.name]}")
             }
 
             MapObjective.POSITION -> {
                 markerDestination?.remove()
-                markerDestination =
-                    mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
+                markerDestination = mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
                 Timber.d("onMapReady: ${latLngDestination[markerName.name]}")
             }
         }

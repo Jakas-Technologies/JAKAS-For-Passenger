@@ -1,20 +1,15 @@
 package com.miftah.jakasforpassenger.core.data.source.remote.socket
 
 import com.google.android.gms.maps.model.LatLng
-import com.miftah.jakasforpassenger.utils.Angkot
 import com.miftah.jakasforpassenger.utils.Resource
 
-interface SocketHandlerService {
+interface SocketUserPositionHandlerService {
 
-    fun initSession(angkotDepartment: Angkot) : Resource<Unit>
-
-    fun getAngkotPosition(callback: (List<String>) -> Unit)
+    fun initSession() : Resource<Unit>
 
     fun sendUserPosition(userPosition: LatLng)
 
-    fun establishConnection()
-
-    fun closeConnection()
+    fun closeConnection() : Resource<Unit>
 }
 
 /*
