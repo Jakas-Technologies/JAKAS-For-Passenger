@@ -46,7 +46,7 @@ android {
 }
 
 dependencies {
-    //
+    // serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // Socket
@@ -68,6 +68,7 @@ dependencies {
     implementation("com.google.android.libraries.places:places:3.3.0")
     implementation("com.google.maps.android:android-maps-utils:2.3.0")
     implementation("com.google.maps:google-maps-services:2.2.0")
+    implementation("com.google.maps.android:places-ktx:3.0.0")
 
     // Dagger - Hilt
     implementation ("com.google.dagger:hilt-android:2.48.1")

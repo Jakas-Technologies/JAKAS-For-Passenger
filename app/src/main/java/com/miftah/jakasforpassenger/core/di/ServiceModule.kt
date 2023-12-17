@@ -1,5 +1,7 @@
 package com.miftah.jakasforpassenger.core.di
 
+import com.miftah.jakasforpassenger.core.data.source.remote.socket.SocketFindAngkotImpl
+import com.miftah.jakasforpassenger.core.data.source.remote.socket.SocketFindAngkotsService
 import com.miftah.jakasforpassenger.core.data.source.remote.socket.SocketUserPositionHandlerImpl
 import com.miftah.jakasforpassenger.core.data.source.remote.socket.SocketUserPositionHandlerService
 import dagger.Module
@@ -14,5 +16,9 @@ object ServiceModule {
 
     @Provides
     @ServiceScoped
-    fun provideSocketHandlerService() : SocketUserPositionHandlerService = SocketUserPositionHandlerImpl()
+    fun provideSocketUserPositionHandlerService() : SocketUserPositionHandlerService = SocketUserPositionHandlerImpl()
+
+    @Provides
+    @ServiceScoped
+    fun provideSocketFindAngkotHandlerService() : SocketFindAngkotsService = SocketFindAngkotImpl()
 }
