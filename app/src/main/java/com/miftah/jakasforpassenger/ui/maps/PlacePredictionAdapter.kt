@@ -33,7 +33,7 @@ class PlacePredictionAdapter : RecyclerView.Adapter<PlacePredictionAdapter.Place
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlacePredictionViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return PlacePredictionViewHolder(
-            inflater.inflate(R.layout.place_prediction_item, parent, false)
+            inflater.inflate(R.layout.item_place_prediction, parent, false)
         )
     }
 

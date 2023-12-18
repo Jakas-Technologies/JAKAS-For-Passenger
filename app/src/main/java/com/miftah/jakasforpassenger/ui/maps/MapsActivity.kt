@@ -80,7 +80,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     private lateinit var binding: ActivityMapsBinding
     private val viewModel: MapsViewModel by viewModels()
 
-    private val latLngDestination: MutableMap<String, SerializableDestination?> = mutableMapOf()
+    private val latLngDestination: MutableMap<String, LatLng?> = mutableMapOf()
+    private val nameDestination: MutableMap<String, SerializableDestination?> = mutableMapOf()
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var placesClient: PlacesClient
     private var sessionToken: AutocompleteSessionToken? = null
@@ -119,11 +120,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         placesClient = Places.createClient(this)
 
         includeSearchbar = findViewById(R.id.search_position_inc)
-
-
-//        autocompleteBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-        autocompleteBehaviour()
-        searchbarBehaviour()
         /*
                 binding.rvDepartmentAngkot.layoutManager =
                     LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -136,17 +132,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 }
         */
 
-
+        autocompleteBehaviour()
+        searchbarBehaviour()
         subscribeToObservers()
-        autocompleteRv()
+//        autocompleteRv()
     }
 
     private fun searchbarBehaviour() {
 
-        binding.searchPositionInc.apply {
-            setVisible(searchbarIsVisible)
-            btnToSearchAct.setOnClickListener { }
+        binding.btnToSearchAct.setOnClickListener {
+            autocompleteBottomSheetBehavior.state = STATE_HALF_EXPANDED
         }
+
     }
 
     private fun subscribeToObservers() {
@@ -196,41 +193,40 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.setOnMapClickListener(this)
-//        setupAutoComplete()
-        findRoute()
+//        findRoute()
 
-        /*        viewModel.pointDestination.observe(this) { data ->
-                    latLngDestination[MapObjective.DESTINATION.name] = data
-                    makeMarker(data, MapObjective.DESTINATION)
+        viewModel.pointDestination.observe(this) { data ->
+            latLngDestination[MapObjective.DESTINATION.name] = data
+            makeMarker(data, MapObjective.DESTINATION)
+        }
+
+        viewModel.pointPosition.observe(this) { data ->
+            latLngDestination[MapObjective.POSITION.name] = data
+            makeMarker(data, MapObjective.POSITION)
+        }
+
+        /*binding.btnFindPosition.setOnClickListener {
+            fusedLocationProviderClient.lastLocation.addOnSuccessListener { data ->
+                if (data != null) {
+                    val latLng = LatLng(data.latitude, data.longitude)
+                    viewModel.updatePoint(MapObjective.POSITION, latLng)
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, MAP_ZOOM))
+                } else {
+                    Timber.d("Empty")
                 }
-
-                viewModel.pointPosition.observe(this) { data ->
-                    latLngDestination[MapObjective.POSITION.name] = data
-                    makeMarker(data, MapObjective.POSITION)
-                }*/
-
-        /*       binding.btnFindPosition.setOnClickListener {
-                   fusedLocationProviderClient.lastLocation.addOnSuccessListener { data ->
-                       if (data != null) {
-                           val latLng = LatLng(data.latitude, data.longitude)
-                           viewModel.updatePoint(MapObjective.POSITION, latLng)
-                           mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, MAP_ZOOM))
-                       } else {
-                           Timber.d("Empty")
-                       }
-                   }
-               }*/
+            }
+        }*/
 
         viewModel.isPointFilled.observe(this) { isFilled ->
             if (isFilled) {
-                angkotDirectionRv()
-                findRoute()
+//                angkotDirectionRv()
+//                findRoute()
             }
         }
 
         viewModel.isOnPath.observe(this) { onPath ->
             if (!onPath) {
-                findRoute()
+//                findRoute()
             }
         }
 
@@ -273,8 +269,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                     binding.progressBar.visibility = View.GONE
                     Toast.makeText(this, result.error, Toast.LENGTH_SHORT).show()
                 }
-
-                else -> {}
             }
         }
     }
@@ -308,23 +302,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 val place = response.place
                 place ?: return@addOnSuccessListener
                 if (searchbarFocus) {
-                    latLngDestination[MapObjective.POSITION.name].apply {
+                    nameDestination[MapObjective.POSITION.name].apply {
                         this?.latitude = place.latLng?.latitude!!
                         this?.longitude = place.latLng?.longitude!!
                         this?.address = place.address
                         this?.name = place.name
                     }
                     binding.autocompleteInc.edInputPosition.setText(place.name)
-                    binding.searchPositionInc.tvUserPosition.text = place.name
+                    binding.tvUserPosition.text = place.name
+                    viewModel.updatePoint(MapObjective.POSITION, place.latLng!!)
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.latLng!!, MAP_ZOOM))
                 } else {
-                    latLngDestination[MapObjective.DESTINATION.name].apply {
+                    nameDestination[MapObjective.DESTINATION.name].apply {
                         this?.latitude = place.latLng?.latitude!!
                         this?.longitude = place.latLng?.longitude!!
                         this?.address = place.address
                         this?.name = place.name
                     }
                     binding.autocompleteInc.edInputDestination.setText(place.name)
-                    binding.searchPositionInc.tvUserDestination.text = place.name
+                    binding.tvUserDestination.text = place.name
+                    viewModel.updatePoint(MapObjective.DESTINATION, place.latLng!!)
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.latLng!!, MAP_ZOOM))
                 }
             }.addOnFailureListener { exception: Exception ->
                 if (exception is ApiException) {
@@ -338,7 +336,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         binding.autocompleteInc.apply {
             edInputPosition.onFocusChangeListener = this@MapsActivity
             edInputDestination.onFocusChangeListener = this@MapsActivity
-
             edInputPosition.addTextChangedListener(this@MapsActivity)
             edInputDestination.addTextChangedListener(this@MapsActivity)
         }
@@ -365,66 +362,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
             override fun onSlide(bottomSheet: View, slideOffset: Float) {}
         })
-
-    }
-
-    private fun setupAutoComplete() {
-        /*        autoCompletePosition =
-                    supportFragmentManager.findFragmentById(binding.autocompletePositionFragment.id) as AutocompleteSupportFragment
-
-                autoCompletePosition.setPlaceFields(
-                    listOf(
-                        Place.Field.ID,
-                        Place.Field.LAT_LNG,
-                        Place.Field.ADDRESS
-                    )
-                )*/
-
-        /*        autoCompleteDestination =
-                    supportFragmentManager.findFragmentById(binding.autocompleteDestinationFragment.id) as AutocompleteSupportFragment
-
-                autoCompleteDestination.setPlaceFields(
-                    listOf(
-                        Place.Field.ID,
-                        Place.Field.LAT_LNG,
-                        Place.Field.ADDRESS
-                    )
-                )
-
-                autoCompleteDestination.setOnPlaceSelectedListener(object : PlaceSelectionListener {
-                    override fun onError(status: Status) {
-                        Toast.makeText(this@MapsActivity, status.statusMessage, Toast.LENGTH_SHORT).show()
-                    }
-
-                    override fun onPlaceSelected(place: Place) {
-                        autoCompleteDestination.setText(place.address)
-                        val latLng = place.latLng
-                        latLng?.let { data ->
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(data, 12F))
-                            viewModel.updatePoint(MapObjective.DESTINATION, data)
-                        }
-
-                    }
-
-                })
-
-                autoCompletePosition.setOnPlaceSelectedListener(object : PlaceSelectionListener {
-                    override fun onError(status: Status) {
-                        Toast.makeText(this@MapsActivity, status.statusMessage, Toast.LENGTH_SHORT).show()
-                    }
-
-                    override fun onPlaceSelected(place: Place) {
-                        autoCompletePosition.setText(place.address)
-                        val latLng = place.latLng
-                        latLng?.let { data ->
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(data, 12F))
-                            viewModel.updatePoint(MapObjective.POSITION, data)
-                        }
-                    }
-
-                })*/
-
-
     }
 
     private var cursor = true
@@ -443,15 +380,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         when (markerName) {
             MapObjective.DESTINATION -> {
                 markerPosition?.remove()
-                markerPosition =
-                    mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
+                markerPosition = mMap.addMarker(
+                    MarkerOptions()
+                        .position(latLng)
+                        .title(markerName.name)
+                )
                 Timber.d("onMapReady: ${latLngDestination[markerName.name]}")
             }
 
             MapObjective.POSITION -> {
                 markerDestination?.remove()
+//                val newIcon = BitmapDescriptorFactory.fromResource(R.drawable.ic_user_location)
                 markerDestination =
-                    mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
+                    mMap.addMarker(
+                        MarkerOptions()
+                            .position(latLng)
+                            .title(markerName.name)
+                    )
                 Timber.d("onMapReady: ${latLngDestination[markerName.name]}")
             }
         }

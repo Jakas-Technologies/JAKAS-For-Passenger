@@ -164,7 +164,7 @@ class LocationTrackerService : LifecycleService() {
         val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setAutoCancel(false)
             .setOngoing(true)
-            .setSmallIcon(R.drawable.iconlocation2)
+            .setSmallIcon(R.drawable.ic_user_location)
             .setContentTitle("Find Transportation Near You")
             .setContentIntent(pendingIntent())
 

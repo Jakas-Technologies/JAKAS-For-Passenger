@@ -103,6 +103,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/search_container"
-        tools:listitem="@layout/place_prediction_item" />
+        tools:listitem="@layout/item_place_prediction" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

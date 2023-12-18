@@ -14,7 +14,7 @@ object Constants {
 
     const val POLYLINE_COLOR = Color.RED
     const val POLYLINE_WIDTH = 8f
-    const val MAP_ZOOM = 15f
+    const val MAP_ZOOM = 18f
 
     const val ACTION_START_SERVICE = "ACTION_START_SERVICE"
     const val ACTION_STOP_SERVICE = "ACTION_STOP_SERVICE"
