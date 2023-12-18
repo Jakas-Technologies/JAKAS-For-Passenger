@@ -118,7 +118,7 @@ class LocationTrackerService : LifecycleService() {
 
     private fun initTracking() {
         positionPath?.let {
-            userPosition.postValue(LatLng(it.latitude, it.longitude))
+            userPosition.postValue(it.latLng)
         }
         socketUserPositionHandlerService.initSession()
     }
