@@ -80,7 +80,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     private lateinit var binding: ActivityMapsBinding
     private val viewModel: MapsViewModel by viewModels()
 
-    //    private val latLngDestination: MutableMap<String, LatLng?> = mutableMapOf()
     private val nameDestination: MutableMap<String, SerializableDestination?> = mutableMapOf()
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var placesClient: PlacesClient
@@ -93,7 +92,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     private var userPosition: LatLng = LatLng(0.0, 0.0)
 
     private var serviceOn = false
-    private var searchbarIsVisible = true
+    private var isFilled = false
+
+    private lateinit var autocompleteBottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
+    private lateinit var paymentBottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
 
     @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -120,17 +122,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         placesClient = Places.createClient(this)
 
         includeSearchbar = findViewById(R.id.search_position_inc)
-        /*
-                binding.rvDepartmentAngkot.layoutManager =
-                    LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
-                binding.btnToggleFind.setOnClickListener {
-                    sendCommandToService(Constants.ACTION_START_SERVICE)
-                }
-                binding.btnToggleCancel.setOnClickListener {
-                    sendCommandToService(Constants.ACTION_STOP_SERVICE)
-                }
-        */
+        autocompleteBottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.autocomplete_inc))
+        paymentBottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.payment_state_inc))
 
         autocompleteBehaviour()
         searchbarBehaviour()
@@ -139,16 +133,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     }
 
     private fun searchbarBehaviour() {
-
         binding.btnToSearchAct.setOnClickListener {
             autocompleteBottomSheetBehavior.state = STATE_HALF_EXPANDED
         }
-
     }
 
     private fun subscribeToObservers() {
         LocationTrackerService.isTracking.observe(this) { isTracking ->
-//            isServiceTracking(isTracking)
+            viewModel.updateServiceStatus(isTracking)
         }
         LocationTrackerService.angkotPosition.observe(this) { allAngkotPosition ->
 //            if (serviceOn) {
@@ -178,25 +170,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         }
     }
 
-    /*    private fun isServiceTracking(tracking: Boolean) {
-            this.serviceOn = tracking
-            if (serviceOn) {
-                binding.btnToggleCancel.visibility = View.VISIBLE
-                binding.btnToggleFind.visibility = View.GONE
-            } else {
-                binding.btnToggleFind.visibility = View.VISIBLE
-                binding.btnToggleCancel.visibility = View.GONE
-            }
-        }*/
-
     @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.setOnMapClickListener(this)
-//        findRoute()
+        findRoute()
 
         viewModel.pointDestination.observe(this) { data ->
-            Timber.d("test + ${data?.name}")
             data?.let {
                 nameDestination[MapObjective.DESTINATION.name] = data
                 makeMarker(data.latLng, MapObjective.DESTINATION)
@@ -217,13 +197,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         viewModel.isPointFilled.observe(this) { isFilled ->
             if (isFilled) {
 //                angkotDirectionRv()
-//                findRoute()
+                this.isFilled = isFilled
+                paymentBehaviour()
+                findRoute()
             }
         }
 
         viewModel.isOnPath.observe(this) { onPath ->
             if (!onPath) {
-//                findRoute()
+                findRoute()
             }
         }
 
@@ -238,7 +220,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camera), 100, null)
         }
 
+        binding.fabFindMyLocation.setOnClickListener {
+            fusedLocationProviderClient.lastLocation.addOnSuccessListener { data ->
+                if (data != null) {
+                    val latLng = LatLng(data.latitude, data.longitude)
+                    val namePosition = "Your Position"
+                    val serializableDestination = SerializableDestination(
+                        name = namePosition,
+                        address = namePosition,
+                        latLng = latLng
+                    )
+                    viewModel.updatePoint(MapObjective.POSITION, serializableDestination)
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, MAP_ZOOM))
+                } else {
+                    Timber.d("Empty")
+                }
+            }
+        }
 
+        viewModel.serviceLive.observe(this) {
+            this.serviceOn = it
+            paymentBehaviour()
+        }
     }
 
     private fun angkotDirectionRv() {
@@ -318,7 +321,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             }
     }
 
-    private lateinit var autocompleteBottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
     private fun autocompleteBehaviour() {
         binding.autocompleteInc.apply {
             edInputPosition.onFocusChangeListener = this@MapsActivity
@@ -326,8 +328,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             edInputPosition.addTextChangedListener(this@MapsActivity)
             edInputDestination.addTextChangedListener(this@MapsActivity)
         }
-        autocompleteBottomSheetBehavior =
-            BottomSheetBehavior.from(findViewById(R.id.autocomplete_inc))
         autocompleteBottomSheetBehavior.halfExpandedRatio = 0.75f
         autocompleteBottomSheetBehavior.state = STATE_HALF_EXPANDED
         autocompleteBottomSheetBehavior.addBottomSheetCallback(object : BottomSheetCallback() {
@@ -349,6 +349,31 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
             override fun onSlide(bottomSheet: View, slideOffset: Float) {}
         })
+    }
+
+    private fun paymentBehaviour() {
+        if (!isFilled) return
+        autocompleteBottomSheetBehavior.state = STATE_HIDDEN
+        paymentBottomSheetBehavior.state = STATE_EXPANDED
+        binding.paymentStateInc.apply {
+            if (!serviceOn) {
+                btnConfirmFind.visibility = View.VISIBLE
+                rvAngkotDirection.visibility = View.VISIBLE
+                paymentHasSelectedContainer.visibility = View.GONE
+                btnScanFind.visibility = View.GONE
+                btnCancelFind.visibility = View.GONE
+                btnFinishPayment.visibility = View.GONE
+                btnCancelPayment.visibility = View.GONE
+            } else {
+                btnConfirmFind.visibility = View.GONE
+                rvAngkotDirection.visibility = View.GONE
+                paymentHasSelectedContainer.visibility = View.VISIBLE
+                btnScanFind.visibility = View.VISIBLE
+                btnCancelFind.visibility = View.VISIBLE
+                btnFinishPayment.visibility = View.GONE
+                btnCancelPayment.visibility = View.GONE
+            }
+        }
     }
 
     private var cursor = true

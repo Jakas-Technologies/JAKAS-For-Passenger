@@ -30,6 +30,9 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
     private var _userPosition = MutableLiveData<SerializableDestination>()
     val userPosition: LiveData<SerializableDestination> = _userPosition
 
+    private var _serviceLive = MutableLiveData<Boolean>()
+    val serviceLive: LiveData<Boolean> = _serviceLive
+
     fun updatePoint(pointType: MapObjective, newValue: SerializableDestination) {
         when (pointType) {
             MapObjective.DESTINATION -> {
@@ -48,6 +51,10 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
         newValue?.let {
             _userPosition.postValue(it)
         }
+    }
+
+    fun updateServiceStatus(status : Boolean) {
+        _serviceLive.postValue(status)
     }
 
     private fun checkPointIsFilled() {
