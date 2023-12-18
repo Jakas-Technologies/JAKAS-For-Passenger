@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/transaction_graph"
+    app:startDestination="@id/paymentMethodeFragment">
+
+    <fragment
+        android:id="@+id/paymentMethodeFragment"
+        android:name="com.miftah.jakasforpassenger.ui.transaction.PaymentMethodeFragment"
+        android:label="fragment_payment_methode"
+        tools:layout="@layout/fragment_payment_methode" >
+        <action
+            android:id="@+id/action_paymentMethodeFragment_to_paymentActivity2"
+            app:destination="@id/paymentActivity2" />
+    </fragment>
+    <activity
+        android:id="@+id/paymentActivity2"
+        android:name="com.miftah.jakasforpassenger.ui.transaction.PaymentActivity"
+        android:label="activity_payment"
+        tools:layout="@layout/activity_payment" />
+</navigation>

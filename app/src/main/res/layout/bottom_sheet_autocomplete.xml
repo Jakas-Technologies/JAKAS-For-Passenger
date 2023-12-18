@@ -6,8 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="#ffffff"
-    app:behavior_hideable="false"
     android:paddingBottom="32dp"
+    app:behavior_hideable="false"
     app:behavior_peekHeight="32dp"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
@@ -15,15 +15,15 @@
         android:id="@+id/drag_handle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:layout_margin="10dp"
         android:id="@+id/btn_cancel_find"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_margin="10dp"
         android:background="@color/red"
         android:visibility="visible"
         app:layout_constraintEnd_toStartOf="@+id/btn_pay_find"
@@ -31,10 +31,10 @@
         app:layout_constraintTop_toBottomOf="@+id/drag_handle" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:layout_margin="10dp"
         android:id="@+id/btn_pay_find"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_margin="10dp"
         android:background="@color/green"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
@@ -42,10 +42,10 @@
         app:layout_constraintTop_toBottomOf="@+id/drag_handle" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:layout_margin="10dp"
         android:id="@+id/btn_confirm_find"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_margin="10dp"
         android:background="@color/orange"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"

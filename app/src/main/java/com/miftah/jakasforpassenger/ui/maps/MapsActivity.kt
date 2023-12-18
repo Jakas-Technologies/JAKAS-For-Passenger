@@ -342,20 +342,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             edInputPosition.addTextChangedListener(this@MapsActivity)
             edInputDestination.addTextChangedListener(this@MapsActivity)
         }
-        autocompleteBottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.autocomplete_inc))
-        autocompleteBottomSheetBehavior.halfExpandedRatio  = 0.5f
+        autocompleteBottomSheetBehavior =
+            BottomSheetBehavior.from(findViewById(R.id.autocomplete_inc))
+        autocompleteBottomSheetBehavior.halfExpandedRatio = 0.5f
         autocompleteBottomSheetBehavior.state = STATE_HALF_EXPANDED
         autocompleteBottomSheetBehavior.addBottomSheetCallback(object : BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 when (newState) {
-                    STATE_EXPANDED-> {
+                    STATE_EXPANDED -> {
                         includeSearchbar.visibility = View.GONE
                         binding.fabFindMyLocation.visibility = View.GONE
                     }
+
                     STATE_COLLAPSED, STATE_HIDDEN -> {
                         includeSearchbar.visibility = View.VISIBLE
                         binding.fabFindMyLocation.visibility = View.VISIBLE
                     }
+
                     else -> {}
                 }
             }

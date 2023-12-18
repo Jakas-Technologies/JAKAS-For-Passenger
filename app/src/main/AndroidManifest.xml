@@ -21,6 +21,22 @@
         android:theme="@style/Theme.JAKASForPassenger"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
+        <activity
+            android:name=".ui.transaction.PaymentActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.qrscanner.QrCodeScannerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.transaction.TransactionActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".core.services.LocationTrackerService"
             android:foregroundServiceType="location" />
@@ -37,22 +53,16 @@
         <activity
             android:name=".ui.auth.OnboardingActivity"
             android:exported="false" />
-
         <activity
             android:name=".ui.home.MainActivity"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
 
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
-            tools:node="remove">
-        </provider>
+            tools:node="remove" />
     </application>
 
 </manifest>
