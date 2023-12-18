@@ -37,6 +37,7 @@
         <activity
             android:name=".ui.auth.OnboardingActivity"
             android:exported="false" />
+
         <activity
             android:name=".ui.home.MainActivity"
             android:exported="true">

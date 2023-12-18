@@ -1,12 +1,16 @@
 package com.miftah.jakasforpassenger.ui.maps
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.work.Constraints
 import androidx.work.Data.Builder
@@ -14,7 +18,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import com.google.android.gms.common.api.Status
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -28,9 +32,14 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.AutocompletePrediction
+import com.google.android.libraries.places.api.model.AutocompleteSessionToken
 import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.widget.AutocompleteSupportFragment
-import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
+import com.google.android.libraries.places.api.model.PlaceTypes
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
+import com.google.android.libraries.places.api.net.FetchPlaceResponse
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
+import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.maps.android.PolyUtil
 import com.google.maps.model.DirectionsResult
 import com.miftah.jakasforpassenger.R
@@ -38,11 +47,7 @@ import com.miftah.jakasforpassenger.core.services.LocationTrackerService
 import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
 import com.miftah.jakasforpassenger.databinding.ActivityMapsBinding
 import com.miftah.jakasforpassenger.utils.Angkot
-import com.miftah.jakasforpassenger.utils.Constants
 import com.miftah.jakasforpassenger.utils.Constants.DESTINATION_LAT_LNG
-import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DEPARTMENT_ANGKOT
-import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DESTINATION_SERIALIZABLE
-import com.miftah.jakasforpassenger.utils.Constants.EXTRA_POSITION_SERIALIZABLE
 import com.miftah.jakasforpassenger.utils.Constants.KEY_MAP
 import com.miftah.jakasforpassenger.utils.Constants.MAP_ZOOM
 import com.miftah.jakasforpassenger.utils.Constants.MapObjective
@@ -50,28 +55,35 @@ import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_COLOR
 import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_WIDTH
 import com.miftah.jakasforpassenger.utils.Constants.POSITION_LAT_LNG
 import com.miftah.jakasforpassenger.utils.Result
-import com.miftah.jakasforpassenger.utils.SerializableLatLng
+import com.miftah.jakasforpassenger.utils.SerializableDestination
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapClickListener {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapClickListener,
+    View.OnFocusChangeListener, TextWatcher {
 
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
     private val viewModel: MapsViewModel by viewModels()
 
-    private lateinit var autoCompletePosition: AutocompleteSupportFragment
-    private lateinit var autoCompleteDestination: AutocompleteSupportFragment
+    private val latLngDestination: MutableMap<String, SerializableDestination?> = mutableMapOf()
+    private val handler = Handler(Looper.getMainLooper())
+    private lateinit var placesClient: PlacesClient
+    private var sessionToken: AutocompleteSessionToken? = null
 
-    private val latLngDestination: MutableMap<String, LatLng?> = mutableMapOf()
+    private val adapter = PlacePredictionAdapter()
+
     private var angkotChoice: Angkot? = null
     private var polylineRoute: Polyline? = null
-
     private var userPosition: LatLng = LatLng(0.0, 0.0)
 
     private var serviceOn = false
+    private var searchbarFocus = true
 
     @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -91,29 +103,44 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        Places.initialize(applicationContext, KEY_MAP)
+
         workManager = WorkManager.getInstance(this)
+        sessionToken = AutocompleteSessionToken.newInstance()
+        placesClient = Places.createClient(this)
 
-        binding.rvDepartmentAngkot.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.autocompleteInc.apply {
+            edInputPosition.onFocusChangeListener = this@MapsActivity
+            edInputDestination.onFocusChangeListener = this@MapsActivity
 
-        binding.btnToggleFind.setOnClickListener {
-            sendCommandToService(Constants.ACTION_START_SERVICE)
+            edInputPosition.addTextChangedListener(this@MapsActivity)
+            edInputDestination.addTextChangedListener(this@MapsActivity)
         }
-        binding.btnToggleCancel.setOnClickListener {
-            sendCommandToService(Constants.ACTION_STOP_SERVICE)
-        }
+        /*
+                binding.rvDepartmentAngkot.layoutManager =
+                    LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+
+                binding.btnToggleFind.setOnClickListener {
+                    sendCommandToService(Constants.ACTION_START_SERVICE)
+                }
+                binding.btnToggleCancel.setOnClickListener {
+                    sendCommandToService(Constants.ACTION_STOP_SERVICE)
+                }
+        */
+
 
         subscribeToObservers()
+        autocompleteRv()
     }
 
     private fun subscribeToObservers() {
         LocationTrackerService.isTracking.observe(this) { isTracking ->
-            isServiceTracking(isTracking)
+//            isServiceTracking(isTracking)
         }
         LocationTrackerService.angkotPosition.observe(this) { allAngkotPosition ->
-            if (serviceOn) {
-
-            }
+//            if (serviceOn) {
+//
+//            }
         }
         LocationTrackerService.userPosition.observe(this) { userLastPosition ->
             if (serviceOn) {
@@ -138,49 +165,49 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         }
     }
 
-    private fun isServiceTracking(tracking: Boolean) {
-        this.serviceOn = tracking
-        if (serviceOn) {
-            binding.btnToggleCancel.visibility = View.VISIBLE
-            binding.btnToggleFind.visibility = View.GONE
-        } else {
-            binding.btnToggleFind.visibility = View.VISIBLE
-            binding.btnToggleCancel.visibility = View.GONE
-        }
-    }
+    /*    private fun isServiceTracking(tracking: Boolean) {
+            this.serviceOn = tracking
+            if (serviceOn) {
+                binding.btnToggleCancel.visibility = View.VISIBLE
+                binding.btnToggleFind.visibility = View.GONE
+            } else {
+                binding.btnToggleFind.visibility = View.VISIBLE
+                binding.btnToggleCancel.visibility = View.GONE
+            }
+        }*/
 
     @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.setOnMapClickListener(this)
-        setupAutoComplete()
+//        setupAutoComplete()
         findRoute()
 
-        viewModel.pointDestination.observe(this) { data ->
-            latLngDestination[MapObjective.DESTINATION.name] = data
-            makeMarker(data, MapObjective.DESTINATION)
-        }
-
-        viewModel.pointPosition.observe(this) { data ->
-            latLngDestination[MapObjective.POSITION.name] = data
-            makeMarker(data, MapObjective.POSITION)
-        }
-
-        binding.btnFindPosition.setOnClickListener {
-            fusedLocationProviderClient.lastLocation.addOnSuccessListener { data ->
-                if (data != null) {
-                    val latLng = LatLng(data.latitude, data.longitude)
-                    viewModel.updatePoint(MapObjective.POSITION, latLng)
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, MAP_ZOOM))
-                } else {
-                    Timber.d("Empty")
+        /*        viewModel.pointDestination.observe(this) { data ->
+                    latLngDestination[MapObjective.DESTINATION.name] = data
+                    makeMarker(data, MapObjective.DESTINATION)
                 }
-            }
-        }
+
+                viewModel.pointPosition.observe(this) { data ->
+                    latLngDestination[MapObjective.POSITION.name] = data
+                    makeMarker(data, MapObjective.POSITION)
+                }*/
+
+        /*       binding.btnFindPosition.setOnClickListener {
+                   fusedLocationProviderClient.lastLocation.addOnSuccessListener { data ->
+                       if (data != null) {
+                           val latLng = LatLng(data.latitude, data.longitude)
+                           viewModel.updatePoint(MapObjective.POSITION, latLng)
+                           mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, MAP_ZOOM))
+                       } else {
+                           Timber.d("Empty")
+                       }
+                   }
+               }*/
 
         viewModel.isPointFilled.observe(this) { isFilled ->
             if (isFilled) {
-                showRv()
+                angkotDirectionRv()
                 findRoute()
             }
         }
@@ -191,7 +218,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             }
         }
 
-        viewModel.userPosition.observe(this) {data ->
+        viewModel.userPosition.observe(this) { data ->
             markerUser?.remove()
             markerUser = mMap.addMarker(MarkerOptions().position(data).title("USER"))
             Timber.d("onMapReady: $data")
@@ -204,14 +231,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
     }
 
-    private fun showRv() {
+    private fun angkotDirectionRv() {
         viewModel.findAngkotBaseOnPositionAndDestination(
             latLngDestination[MapObjective.POSITION.name] as LatLng,
             latLngDestination[MapObjective.DESTINATION.name] as LatLng
         ).observe(this) { result ->
             val adapter = AngkotDepartmentAdapter(
                 onClick = { angkot ->
-                    binding.tvPrice.text = angkot.price.toString()
+//                    binding.tvPrice.text = angkot.price.toString()
                     angkotChoice = angkot
                 }
             )
@@ -219,7 +246,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 is Result.Success -> {
                     binding.progressBar.visibility = View.GONE
                     adapter.submitList(result.data)
-                    binding.rvDepartmentAngkot.adapter = adapter
+//                    binding.rvDepartmentAngkot.adapter = adapter
                 }
 
                 is Result.Loading -> {
@@ -236,62 +263,115 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         }
     }
 
+    private fun autocompleteRv() {
+        val layoutManager = LinearLayoutManager(this)
+        binding.autocompleteInc.apply {
+            rvSearchItem.layoutManager = layoutManager
+            rvSearchItem.adapter = adapter
+            rvSearchItem.addItemDecoration(
+                DividerItemDecoration(
+                    this@MapsActivity,
+                    layoutManager.orientation
+                )
+            )
+        }
+        adapter.onPlaceClickListener = {
+            CoroutineScope(Dispatchers.Main).launch {
+                findPlaceByAutocompletePrediction(it)
+            }
+        }
+    }
+
+    private fun findPlaceByAutocompletePrediction(placePrediction: AutocompletePrediction) {
+        val placeFields = listOf(Place.Field.LAT_LNG, Place.Field.NAME, Place.Field.ADDRESS)
+
+        val request = FetchPlaceRequest.newInstance(placePrediction.placeId, placeFields)
+
+        placesClient.fetchPlace(request)
+            .addOnSuccessListener { response: FetchPlaceResponse ->
+                val place = response.place
+                place ?: return@addOnSuccessListener
+                if (cursor) {
+                    latLngDestination[MapObjective.POSITION.name].apply {
+                        this?.latitude = place.latLng?.latitude!!
+                        this?.longitude = place.latLng?.longitude!!
+                        this?.address = place.address
+                        this?.name = place.name
+                    }
+                    binding.autocompleteInc.edInputPosition.setText(place.name)
+                } else {
+                    latLngDestination[MapObjective.DESTINATION.name].apply {
+                        this?.latitude = place.latLng?.latitude!!
+                        this?.longitude = place.latLng?.longitude!!
+                        this?.address = place.address
+                        this?.name = place.name
+                    }
+                    binding.autocompleteInc.edInputDestination.setText(place.name)
+                }
+            }.addOnFailureListener { exception: Exception ->
+                if (exception is ApiException) {
+                    Timber.e("Place not found: ${exception.message} ${exception.statusCode}")
+                }
+            }
+    }
+
     private fun setupAutoComplete() {
-        Places.initialize(applicationContext, KEY_MAP)
-        autoCompletePosition =
-            supportFragmentManager.findFragmentById(binding.autocompletePositionFragment.id) as AutocompleteSupportFragment
+        /*        autoCompletePosition =
+                    supportFragmentManager.findFragmentById(binding.autocompletePositionFragment.id) as AutocompleteSupportFragment
 
-        autoCompletePosition.setPlaceFields(
-            listOf(
-                Place.Field.ID,
-                Place.Field.LAT_LNG,
-                Place.Field.ADDRESS
-            )
-        )
+                autoCompletePosition.setPlaceFields(
+                    listOf(
+                        Place.Field.ID,
+                        Place.Field.LAT_LNG,
+                        Place.Field.ADDRESS
+                    )
+                )*/
 
-        autoCompleteDestination =
-            supportFragmentManager.findFragmentById(binding.autocompleteDestinationFragment.id) as AutocompleteSupportFragment
+        /*        autoCompleteDestination =
+                    supportFragmentManager.findFragmentById(binding.autocompleteDestinationFragment.id) as AutocompleteSupportFragment
 
-        autoCompleteDestination.setPlaceFields(
-            listOf(
-                Place.Field.ID,
-                Place.Field.LAT_LNG,
-                Place.Field.ADDRESS
-            )
-        )
+                autoCompleteDestination.setPlaceFields(
+                    listOf(
+                        Place.Field.ID,
+                        Place.Field.LAT_LNG,
+                        Place.Field.ADDRESS
+                    )
+                )
 
-        autoCompleteDestination.setOnPlaceSelectedListener(object : PlaceSelectionListener {
-            override fun onError(status: Status) {
-                Toast.makeText(this@MapsActivity, status.statusMessage, Toast.LENGTH_SHORT).show()
-            }
+                autoCompleteDestination.setOnPlaceSelectedListener(object : PlaceSelectionListener {
+                    override fun onError(status: Status) {
+                        Toast.makeText(this@MapsActivity, status.statusMessage, Toast.LENGTH_SHORT).show()
+                    }
 
-            override fun onPlaceSelected(place: Place) {
-                autoCompleteDestination.setText(place.address)
-                val latLng = place.latLng
-                latLng?.let { data ->
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(data, 12F))
-                    viewModel.updatePoint(MapObjective.DESTINATION, data)
-                }
+                    override fun onPlaceSelected(place: Place) {
+                        autoCompleteDestination.setText(place.address)
+                        val latLng = place.latLng
+                        latLng?.let { data ->
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(data, 12F))
+                            viewModel.updatePoint(MapObjective.DESTINATION, data)
+                        }
 
-            }
+                    }
 
-        })
+                })
 
-        autoCompletePosition.setOnPlaceSelectedListener(object : PlaceSelectionListener {
-            override fun onError(status: Status) {
-                Toast.makeText(this@MapsActivity, status.statusMessage, Toast.LENGTH_SHORT).show()
-            }
+                autoCompletePosition.setOnPlaceSelectedListener(object : PlaceSelectionListener {
+                    override fun onError(status: Status) {
+                        Toast.makeText(this@MapsActivity, status.statusMessage, Toast.LENGTH_SHORT).show()
+                    }
 
-            override fun onPlaceSelected(place: Place) {
-                autoCompletePosition.setText(place.address)
-                val latLng = place.latLng
-                latLng?.let { data ->
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(data, 12F))
-                    viewModel.updatePoint(MapObjective.POSITION, data)
-                }
-            }
+                    override fun onPlaceSelected(place: Place) {
+                        autoCompletePosition.setText(place.address)
+                        val latLng = place.latLng
+                        latLng?.let { data ->
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(data, 12F))
+                            viewModel.updatePoint(MapObjective.POSITION, data)
+                        }
+                    }
 
-        })
+                })*/
+
+
     }
 
     private var cursor = true
@@ -310,13 +390,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         when (markerName) {
             MapObjective.DESTINATION -> {
                 markerPosition?.remove()
-                markerPosition = mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
+                markerPosition =
+                    mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
                 Timber.d("onMapReady: ${latLngDestination[markerName.name]}")
             }
 
             MapObjective.POSITION -> {
                 markerDestination?.remove()
-                markerDestination = mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
+                markerDestination =
+                    mMap.addMarker(MarkerOptions().position(latLng).title(markerName.name))
                 Timber.d("onMapReady: ${latLngDestination[markerName.name]}")
             }
         }
@@ -386,10 +468,53 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         for (point in decodedPath) {
             bounds.include(point)
         }
-        if(!serviceOn) mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 50))
+        if (!serviceOn) mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 50))
     }
 
-    private fun sendCommandToService(action: String) {
+    override fun onFocusChange(v: View?, hasFocus: Boolean) {
+        when (v?.id) {
+            R.id.ed_input_position -> {
+                cursor = hasFocus
+            }
+
+            R.id.ed_input_destination -> {
+                cursor = !hasFocus
+            }
+        }
+    }
+
+    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+    override fun afterTextChanged(s: Editable?) {
+        binding.progressBar.isIndeterminate = true
+        handler.removeCallbacksAndMessages(null)
+        handler.postDelayed({ getPlacePredictions(s.toString()) }, 300)
+    }
+
+    private fun getPlacePredictions(query: String) {
+        val newRequest = FindAutocompletePredictionsRequest.builder()
+            .setCountries("ID")
+            .setTypesFilter(listOf(PlaceTypes.ESTABLISHMENT))
+            .setSessionToken(sessionToken)
+            .setQuery(query)
+            .build()
+
+        placesClient.findAutocompletePredictions(newRequest)
+            .addOnSuccessListener { response ->
+                val predictions = response.autocompletePredictions
+                adapter.setPredictions(predictions)
+                binding.progressBar.isIndeterminate = false
+            }.addOnFailureListener { exception: Exception? ->
+                binding.progressBar.isIndeterminate = false
+                if (exception is ApiException) {
+                    Timber.e(exception)
+                }
+            }
+    }
+
+    /*private fun sendCommandToService(action: String) {
         if (latLngDestination[MapObjective.POSITION.name] == null || latLngDestination[MapObjective.DESTINATION.name] == null || angkotChoice == null) {
             return
         }
@@ -409,6 +534,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             it.putExtra(EXTRA_DEPARTMENT_ANGKOT, angkotChoice as Angkot)
             startService(it)
         }
-    }
+    }*/
 
 }

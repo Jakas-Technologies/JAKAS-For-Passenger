@@ -27,7 +27,7 @@ import com.miftah.jakasforpassenger.utils.Constants.EXTRA_POSITION_SERIALIZABLE
 import com.miftah.jakasforpassenger.utils.Constants.NOTIFICATION_CHANNEL_ID
 import com.miftah.jakasforpassenger.utils.Constants.NOTIFICATION_ID
 import com.miftah.jakasforpassenger.utils.MapsUtility
-import com.miftah.jakasforpassenger.utils.SerializableLatLng
+import com.miftah.jakasforpassenger.utils.SerializableDestination
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import javax.inject.Inject
@@ -43,8 +43,8 @@ class LocationTrackerService : LifecycleService() {
     @Inject
     lateinit var socketUserPositionHandlerService: SocketUserPositionHandlerService
 
-    private var destinationPath: SerializableLatLng? = null
-    private var positionPath: SerializableLatLng? = null
+    private var destinationPath: SerializableDestination? = null
+    private var positionPath: SerializableDestination? = null
     private var angkotDepartment: Angkot? = null
 
     companion object {
@@ -71,11 +71,11 @@ class LocationTrackerService : LifecycleService() {
                     if (Build.VERSION.SDK_INT >= 33) {
                         destinationPath = intent.getParcelableExtra(
                             EXTRA_DESTINATION_SERIALIZABLE,
-                            SerializableLatLng::class.java
+                            SerializableDestination::class.java
                         )
                         positionPath = intent.getParcelableExtra(
                             EXTRA_POSITION_SERIALIZABLE,
-                            SerializableLatLng::class.java
+                            SerializableDestination::class.java
                         )
                         angkotDepartment = intent.getParcelableExtra(
                             EXTRA_DEPARTMENT_ANGKOT,

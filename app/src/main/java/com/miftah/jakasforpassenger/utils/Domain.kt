@@ -4,9 +4,11 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data class SerializableLatLng(
-    val latitude: Double,
-    val longitude: Double
+data class SerializableDestination(
+    var name: String?,
+    var address: String?,
+    var latitude: Double,
+    var longitude: Double
 ) : Parcelable
 
 @Parcelize
