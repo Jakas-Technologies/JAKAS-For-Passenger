@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.miftah.jakasforpassenger.R
@@ -75,6 +76,11 @@ class HomeFragment : Fragment(), EasyPermissions.PermissionCallbacks {
         if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
             SettingsDialog.Builder(requireContext()).build().show()
         } else {
+            AlertDialog.Builder(requireContext())
+                .setTitle("Permission restricted")
+                .setMessage("you must enabled our permission")
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
             requestPermissions()
         }
     }

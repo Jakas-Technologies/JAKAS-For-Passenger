@@ -21,16 +21,14 @@
         android:visibility="gone"
         tools:visibility="visible" />
 
-<!--    <include
+    <include
         android:id="@+id/autocomplete_inc"
         layout="@layout/search_auto_complete"/>
 
     <include
         android:id="@+id/search_position_inc"
         layout="@layout/search_position_bar"
-        android:visibility="visible"/>-->
-
-
+        android:visibility="visible"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_find_my_location"
