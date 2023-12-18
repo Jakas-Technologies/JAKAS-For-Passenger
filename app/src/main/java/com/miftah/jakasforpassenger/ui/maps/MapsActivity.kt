@@ -10,6 +10,8 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.work.Constraints
@@ -40,6 +42,12 @@ import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FetchPlaceResponse
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
+import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED
+import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HALF_EXPANDED
+import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
 import com.google.maps.android.PolyUtil
 import com.google.maps.model.DirectionsResult
 import com.miftah.jakasforpassenger.R
@@ -67,6 +75,7 @@ import javax.inject.Inject
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapClickListener,
     View.OnFocusChangeListener, TextWatcher {
 
+    private lateinit var includeSearchbar: CardView
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
     private val viewModel: MapsViewModel by viewModels()
@@ -83,7 +92,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     private var userPosition: LatLng = LatLng(0.0, 0.0)
 
     private var serviceOn = false
-    private var searchbarFocus = true
+    private var searchbarIsVisible = true
 
     @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -109,13 +118,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         sessionToken = AutocompleteSessionToken.newInstance()
         placesClient = Places.createClient(this)
 
-        binding.autocompleteInc.apply {
-            edInputPosition.onFocusChangeListener = this@MapsActivity
-            edInputDestination.onFocusChangeListener = this@MapsActivity
+        includeSearchbar = findViewById(R.id.search_position_inc)
 
-            edInputPosition.addTextChangedListener(this@MapsActivity)
-            edInputDestination.addTextChangedListener(this@MapsActivity)
-        }
+
+//        autocompleteBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        autocompleteBehaviour()
+        searchbarBehaviour()
         /*
                 binding.rvDepartmentAngkot.layoutManager =
                     LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -131,6 +139,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
         subscribeToObservers()
         autocompleteRv()
+    }
+
+    private fun searchbarBehaviour() {
+
+        binding.searchPositionInc.apply {
+            setVisible(searchbarIsVisible)
+            btnToSearchAct.setOnClickListener { }
+        }
     }
 
     private fun subscribeToObservers() {
@@ -291,7 +307,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             .addOnSuccessListener { response: FetchPlaceResponse ->
                 val place = response.place
                 place ?: return@addOnSuccessListener
-                if (cursor) {
+                if (searchbarFocus) {
                     latLngDestination[MapObjective.POSITION.name].apply {
                         this?.latitude = place.latLng?.latitude!!
                         this?.longitude = place.latLng?.longitude!!
@@ -299,6 +315,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                         this?.name = place.name
                     }
                     binding.autocompleteInc.edInputPosition.setText(place.name)
+                    binding.searchPositionInc.tvUserPosition.text = place.name
                 } else {
                     latLngDestination[MapObjective.DESTINATION.name].apply {
                         this?.latitude = place.latLng?.latitude!!
@@ -307,12 +324,45 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                         this?.name = place.name
                     }
                     binding.autocompleteInc.edInputDestination.setText(place.name)
+                    binding.searchPositionInc.tvUserDestination.text = place.name
                 }
             }.addOnFailureListener { exception: Exception ->
                 if (exception is ApiException) {
                     Timber.e("Place not found: ${exception.message} ${exception.statusCode}")
                 }
             }
+    }
+
+    private lateinit var autocompleteBottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
+    private fun autocompleteBehaviour() {
+        binding.autocompleteInc.apply {
+            edInputPosition.onFocusChangeListener = this@MapsActivity
+            edInputDestination.onFocusChangeListener = this@MapsActivity
+
+            edInputPosition.addTextChangedListener(this@MapsActivity)
+            edInputDestination.addTextChangedListener(this@MapsActivity)
+        }
+        autocompleteBottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.autocomplete_inc))
+        autocompleteBottomSheetBehavior.halfExpandedRatio  = 0.5f
+        autocompleteBottomSheetBehavior.state = STATE_HALF_EXPANDED
+        autocompleteBottomSheetBehavior.addBottomSheetCallback(object : BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                when (newState) {
+                    STATE_EXPANDED-> {
+                        includeSearchbar.visibility = View.GONE
+                        binding.fabFindMyLocation.visibility = View.GONE
+                    }
+                    STATE_COLLAPSED, STATE_HIDDEN -> {
+                        includeSearchbar.visibility = View.VISIBLE
+                        binding.fabFindMyLocation.visibility = View.VISIBLE
+                    }
+                    else -> {}
+                }
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {}
+        })
+
     }
 
     private fun setupAutoComplete() {
@@ -471,14 +521,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         if (!serviceOn) mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 50))
     }
 
+    private var searchbarFocus = true
+
     override fun onFocusChange(v: View?, hasFocus: Boolean) {
         when (v?.id) {
             R.id.ed_input_position -> {
-                cursor = hasFocus
+                searchbarFocus = hasFocus
             }
 
             R.id.ed_input_destination -> {
-                cursor = !hasFocus
+                searchbarFocus = !hasFocus
             }
         }
     }

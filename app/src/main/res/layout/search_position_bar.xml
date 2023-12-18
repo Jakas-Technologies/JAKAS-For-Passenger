@@ -26,7 +26,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:drawablePadding="10dp"
-                android:hint="position"
+                android:hint="Position"
                 android:padding="5dp"
                 app:drawableLeftCompat="@drawable/baseline_arrow_circle_up_24" />
 
@@ -35,7 +35,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:drawablePadding="10dp"
-                android:hint="user"
+                android:hint="Destination"
                 android:padding="5dp"
                 app:drawableLeftCompat="@drawable/baseline_album_24" />
         </LinearLayout>
