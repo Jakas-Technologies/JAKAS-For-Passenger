@@ -123,7 +123,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
         includeSearchbar = findViewById(R.id.search_position_inc)
 
-        autocompleteBottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.autocomplete_inc))
+        autocompleteBottomSheetBehavior =
+            BottomSheetBehavior.from(findViewById(R.id.autocomplete_inc))
         paymentBottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.payment_state_inc))
 
         autocompleteBehaviour()
@@ -196,7 +197,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
         viewModel.isPointFilled.observe(this) { isFilled ->
             if (isFilled) {
-//                angkotDirectionRv()
+                angkotDirectionRv()
                 this.isFilled = isFilled
                 paymentBehaviour()
                 findRoute()
@@ -245,13 +246,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     }
 
     private fun angkotDirectionRv() {
+        val linearLayoutManager = LinearLayoutManager(this)
+        binding.paymentStateInc.rvAngkotDirection.layoutManager = linearLayoutManager
         viewModel.findAngkotBaseOnPositionAndDestination(
             nameDestination[MapObjective.POSITION.name] as SerializableDestination,
             nameDestination[MapObjective.DESTINATION.name] as SerializableDestination
         ).observe(this) { result ->
             val adapter = AngkotDepartmentAdapter(
                 onClick = { angkot ->
-//                    binding.tvPrice.text = angkot.price.toString()
                     angkotChoice = angkot
                 }
             )
@@ -259,7 +261,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 is Result.Success -> {
                     binding.progressBar.visibility = View.GONE
                     adapter.submitList(result.data)
-//                    binding.rvDepartmentAngkot.adapter = adapter
+                    binding.paymentStateInc.rvAngkotDirection.adapter = adapter
                 }
 
                 is Result.Loading -> {
