@@ -1,6 +1,7 @@
 package com.miftah.jakasforpassenger.ui.maps
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -51,11 +52,20 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
 import com.google.maps.android.PolyUtil
 import com.google.maps.model.DirectionsResult
 import com.miftah.jakasforpassenger.R
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.QrRequest
 import com.miftah.jakasforpassenger.core.services.LocationTrackerService
 import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
 import com.miftah.jakasforpassenger.databinding.ActivityMapsBinding
 import com.miftah.jakasforpassenger.utils.Angkot
+import com.miftah.jakasforpassenger.utils.Constants.ACTION_CANCEL_PAYING_SERVICE
+import com.miftah.jakasforpassenger.utils.Constants.ACTION_START_PAYING_SERVICE
+import com.miftah.jakasforpassenger.utils.Constants.ACTION_START_SERVICE
+import com.miftah.jakasforpassenger.utils.Constants.ACTION_STOP_SERVICE
 import com.miftah.jakasforpassenger.utils.Constants.DESTINATION_LAT_LNG
+import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DEPARTMENT_ANGKOT
+import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DESTINATION_SERIALIZABLE
+import com.miftah.jakasforpassenger.utils.Constants.EXTRA_IDENTITY_ANGKOT
+import com.miftah.jakasforpassenger.utils.Constants.EXTRA_POSITION_SERIALIZABLE
 import com.miftah.jakasforpassenger.utils.Constants.KEY_MAP
 import com.miftah.jakasforpassenger.utils.Constants.MAP_ZOOM
 import com.miftah.jakasforpassenger.utils.Constants.MapObjective
@@ -90,6 +100,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     private var angkotChoice: Angkot? = null
     private var polylineRoute: Polyline? = null
     private var userPosition: LatLng = LatLng(0.0, 0.0)
+    private var angkotIdentity: QrRequest? = null
 
     private var serviceOn = false
     private var isFilled = false
@@ -127,6 +138,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             BottomSheetBehavior.from(findViewById(R.id.autocomplete_inc))
         paymentBottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.payment_state_inc))
 
+        paymentBottomSheetBehavior.state = STATE_HIDDEN
+        autocompleteBottomSheetBehavior.halfExpandedRatio = 0.5f
+        autocompleteBottomSheetBehavior.state = STATE_HALF_EXPANDED
+
         autocompleteBehaviour()
         searchbarBehaviour()
         subscribeToObservers()
@@ -150,15 +165,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         }
         LocationTrackerService.userPosition.observe(this) { userLastPosition ->
             if (serviceOn) {
-                /*                userPosition = userLastPosition
-                                polylineRoute?.let {
-                                    viewModel.isUserOnPath(userLastPosition, it)
-                                }
-                                val camera = CameraPosition.builder()
-                                    .target(userLastPosition)
-                                    .zoom(MAP_ZOOM)
-                                    .build()
-                                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camera), 100, null)*/
+                userPosition = userLastPosition
+                polylineRoute?.let {
+                    viewModel.isUserOnPath(userLastPosition, it)
+                }
+                val camera = CameraPosition.builder()
+                    .target(userLastPosition)
+                    .zoom(MAP_ZOOM)
+                    .build()
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camera), 100, null)
             }
         }
         LocationTrackerService.realtimeUserPosition.observe(this) { realtimePosition ->
@@ -254,7 +269,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         ).observe(this) { result ->
             val adapter = AngkotDepartmentAdapter(
                 onClick = { angkot ->
+                    binding.paymentStateInc.paymentHasSelectedContainer.visibility = View.VISIBLE
                     angkotChoice = angkot
+                    binding.paymentStateInc.priceHasSelected.text = angkot.price.toString()
+                    binding.paymentStateInc.angkotDirection.text = angkot.id.toString()
                 }
             )
             when (result) {
@@ -297,7 +315,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
     private fun findPlaceByAutocompletePrediction(placePrediction: AutocompletePrediction) {
         val placeFields = listOf(Place.Field.LAT_LNG, Place.Field.NAME, Place.Field.ADDRESS)
-
         val request = FetchPlaceRequest.newInstance(placePrediction.placeId, placeFields)
 
         placesClient.fetchPlace(request)
@@ -330,8 +347,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             edInputPosition.addTextChangedListener(this@MapsActivity)
             edInputDestination.addTextChangedListener(this@MapsActivity)
         }
-        autocompleteBottomSheetBehavior.halfExpandedRatio = 0.75f
-        autocompleteBottomSheetBehavior.state = STATE_HALF_EXPANDED
         autocompleteBottomSheetBehavior.addBottomSheetCallback(object : BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 when (newState) {
@@ -367,15 +382,47 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 btnFinishPayment.visibility = View.GONE
                 btnCancelPayment.visibility = View.GONE
             } else {
-                btnConfirmFind.visibility = View.GONE
-                rvAngkotDirection.visibility = View.GONE
-                paymentHasSelectedContainer.visibility = View.VISIBLE
-                btnScanFind.visibility = View.VISIBLE
-                btnCancelFind.visibility = View.VISIBLE
-                btnFinishPayment.visibility = View.GONE
-                btnCancelPayment.visibility = View.GONE
+                if (angkotIdentity == null) {
+                    btnConfirmFind.visibility = View.GONE
+                    rvAngkotDirection.visibility = View.GONE
+                    btnScanFind.visibility = View.VISIBLE
+                    btnCancelFind.visibility = View.VISIBLE
+                    btnFinishPayment.visibility = View.GONE
+                    btnCancelPayment.visibility = View.GONE
+                } else {
+                    btnFinishPayment.visibility = View.VISIBLE
+                    btnCancelPayment.visibility = View.VISIBLE
+                    btnConfirmFind.visibility = View.GONE
+                    rvAngkotDirection.visibility = View.GONE
+                    btnScanFind.visibility = View.GONE
+                    btnCancelFind.visibility = View.GONE
+                }
+            }
+
+            btnConfirmFind.setOnClickListener {
+                sendCommandToService(ACTION_START_SERVICE)
+            }
+
+            btnCancelFind.setOnClickListener {
+                sendCommandToService(ACTION_STOP_SERVICE)
+            }
+
+            btnScanFind.setOnClickListener {
+                angkotIdentity = QrRequest(1, 1, 1.1)
+                sendCommandToService(ACTION_START_PAYING_SERVICE)
+            }
+
+            btnCancelPayment.setOnClickListener {
+                angkotIdentity = null
+                sendCommandToService(ACTION_CANCEL_PAYING_SERVICE)
+            }
+
+            btnFinishPayment.setOnClickListener {
+                angkotIdentity = null
+                sendCommandToService(ACTION_STOP_SERVICE)
             }
         }
+
     }
 
     private var cursor = true
@@ -542,26 +589,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             }
     }
 
-    /*private fun sendCommandToService(action: String) {
-        if (latLngDestination[MapObjective.POSITION.name] == null || latLngDestination[MapObjective.DESTINATION.name] == null || angkotChoice == null) {
+    private fun sendCommandToService(action: String) {
+        if (nameDestination[MapObjective.POSITION.name] == null || nameDestination[MapObjective.DESTINATION.name] == null || angkotChoice == null) {
+            Timber.e("Something become wrong")
             return
         }
 
-        val serializableDestination = SerializableLatLng(
-            latLngDestination[MapObjective.DESTINATION.name]?.latitude as Double,
-            latLngDestination[MapObjective.DESTINATION.name]?.longitude as Double
-        )
-        val serializablePosition = SerializableLatLng(
-            latLngDestination[MapObjective.DESTINATION.name]?.latitude as Double,
-            latLngDestination[MapObjective.DESTINATION.name]?.longitude as Double
-        )
         Intent(this, LocationTrackerService::class.java).let {
             it.action = action
-            it.putExtra(EXTRA_POSITION_SERIALIZABLE, serializablePosition)
-            it.putExtra(EXTRA_DESTINATION_SERIALIZABLE, serializableDestination)
+            it.putExtra(EXTRA_POSITION_SERIALIZABLE, nameDestination[MapObjective.POSITION.name])
+            it.putExtra(EXTRA_DESTINATION_SERIALIZABLE, nameDestination[MapObjective.DESTINATION.name])
             it.putExtra(EXTRA_DEPARTMENT_ANGKOT, angkotChoice as Angkot)
+            angkotIdentity?.let { data ->
+                it.putExtra(EXTRA_IDENTITY_ANGKOT, data)
+            }
             startService(it)
         }
-    }*/
+    }
 
 }

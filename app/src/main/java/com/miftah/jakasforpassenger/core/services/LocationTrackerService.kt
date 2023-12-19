@@ -15,14 +15,18 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
 import com.miftah.jakasforpassenger.R
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.QrRequest
 import com.miftah.jakasforpassenger.core.data.source.remote.socket.SocketUserPositionHandlerService
 import com.miftah.jakasforpassenger.ui.maps.MapsActivity
 import com.miftah.jakasforpassenger.utils.Angkot
 import com.miftah.jakasforpassenger.utils.Constants
+import com.miftah.jakasforpassenger.utils.Constants.ACTION_CANCEL_PAYING_SERVICE
+import com.miftah.jakasforpassenger.utils.Constants.ACTION_START_PAYING_SERVICE
 import com.miftah.jakasforpassenger.utils.Constants.ACTION_START_SERVICE
 import com.miftah.jakasforpassenger.utils.Constants.ACTION_STOP_SERVICE
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DEPARTMENT_ANGKOT
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DESTINATION_SERIALIZABLE
+import com.miftah.jakasforpassenger.utils.Constants.EXTRA_IDENTITY_ANGKOT
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_POSITION_SERIALIZABLE
 import com.miftah.jakasforpassenger.utils.Constants.NOTIFICATION_CHANNEL_ID
 import com.miftah.jakasforpassenger.utils.Constants.NOTIFICATION_ID
@@ -45,6 +49,7 @@ class LocationTrackerService : LifecycleService() {
 
     private var destinationPath: SerializableDestination? = null
     private var positionPath: SerializableDestination? = null
+    private var angkotIdentity: QrRequest? = null
     private var angkotDepartment: Angkot? = null
 
     companion object {
@@ -92,6 +97,25 @@ class LocationTrackerService : LifecycleService() {
                     Timber.d("Start Service")
                 }
 
+                ACTION_START_PAYING_SERVICE -> {
+                    isTracking.postValue(true)
+                    Timber.d("Init Payment")
+                    angkotIdentity = if (Build.VERSION.SDK_INT >= 33) {
+                        intent.getParcelableExtra(
+                            EXTRA_IDENTITY_ANGKOT,
+                            QrRequest::class.java
+                        )
+                    } else {
+                        intent.getParcelableExtra(EXTRA_IDENTITY_ANGKOT)
+                    }
+                }
+
+                ACTION_CANCEL_PAYING_SERVICE -> {
+                    isTracking.postValue(true)
+                    Timber.d("Cancel Payment")
+                    angkotIdentity = null
+                }
+
                 ACTION_STOP_SERVICE -> {
                     Timber.d("Stop Service")
                     killService()
@@ -103,6 +127,7 @@ class LocationTrackerService : LifecycleService() {
 
     private fun killService() {
         serviceKilled = true
+        isTracking.postValue(false)
         socketUserPositionHandlerService.closeConnection()
         postInitialValues()
         stopForeground(true)
@@ -168,7 +193,7 @@ class LocationTrackerService : LifecycleService() {
             .setContentTitle("Find Transportation Near You")
             .setContentIntent(pendingIntent())
 
-        startForeground(NOTIFICATION_ID, notificationBuilder.build())
+        if(!serviceKilled) startForeground(NOTIFICATION_ID, notificationBuilder.build())
     }
 
     private fun pendingIntent(): PendingIntent {

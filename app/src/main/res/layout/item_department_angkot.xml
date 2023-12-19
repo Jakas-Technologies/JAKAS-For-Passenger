@@ -18,7 +18,7 @@
         app:layout_constraintTop_toBottomOf="@+id/drag_handle">
 
         <TextView
-            android:id="@+id/key_angkot_direction"
+            android:id="@+id/key_angkot_price"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Rp.1000000"

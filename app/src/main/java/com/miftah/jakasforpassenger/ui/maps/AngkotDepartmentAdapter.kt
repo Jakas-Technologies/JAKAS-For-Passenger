@@ -15,7 +15,7 @@ class AngkotDepartmentAdapter(val onClick: (Angkot) -> Unit) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(angkot : Angkot) {
             binding.keyAngkotPlat.text = angkot.id.toString()
-            binding.keyAngkotDirection.text = angkot.department
+            binding.keyAngkotPrice.text = angkot.price.toString()
         }
     }
 

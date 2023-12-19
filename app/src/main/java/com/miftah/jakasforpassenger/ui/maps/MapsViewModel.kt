@@ -3,6 +3,7 @@ package com.miftah.jakasforpassenger.ui.maps
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Polyline
 import com.google.maps.android.PolyUtil
 import com.miftah.jakasforpassenger.core.data.source.AppRepository
@@ -53,7 +54,7 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
         }
     }
 
-    fun updateServiceStatus(status : Boolean) {
+    fun updateServiceStatus(status: Boolean) {
         _serviceLive.postValue(status)
     }
 
@@ -65,21 +66,26 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
         position: SerializableDestination,
         destination: SerializableDestination
     ) = repository.findAngkotBaseOnPositionAndDestination(
-        position.latLng, destination.latLng)
+        position.latLng, destination.latLng
+    )
 
     fun isUserOnPath(
-        userLocation: SerializableDestination,
+        userLocation: LatLng,
         polyline: Polyline,
         tolerance: Double = 10.0
     ) {
         val listLng = polylineToListLatLng(polyline)
         val resultUser = PolyUtil.isLocationOnPath(
-            userLocation.latLng,
+            userLocation,
             listLng,
             false,
             tolerance
         )
-        if (!resultUser) _pointPosition.postValue(userLocation)
+        val lastData = _pointDestination.value
+        lastData?.let {
+            it.latLng = userLocation
+            if (!resultUser) _pointPosition.postValue(lastData)
+        }
         _isOnPath.postValue(resultUser)
     }
 }
