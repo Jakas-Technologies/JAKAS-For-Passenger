@@ -121,6 +121,7 @@ dependencies {
     // Material
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("com.google.android.material:material:1.10.0")
+    implementation("androidx.activity:activity-ktx:1.8.2")
 
     // Fragment + Navigation
     implementation("androidx.fragment:fragment-ktx:1.6.2")

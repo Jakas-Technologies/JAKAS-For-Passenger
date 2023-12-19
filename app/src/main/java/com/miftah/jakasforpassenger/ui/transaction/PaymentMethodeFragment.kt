@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.miftah.jakasforpassenger.databinding.FragmentPaymentMethodeBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -16,6 +17,8 @@ class PaymentMethodeFragment : Fragment() {
 
     private var _binding: FragmentPaymentMethodeBinding? = null
     private val binding get() = _binding!!
+
+    private val viewModel: TransactionViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -30,9 +33,11 @@ class PaymentMethodeFragment : Fragment() {
 //        paymentBottomSheetBehavior = BottomSheetBehavior.from(view.findViewById(R.id.payment_inc))
         binding.cardGopayTransaction.setOnClickListener {
             listener.onExpandBottomSheet()
+            viewModel.initPayment("GoPay")
         }
         binding.cardShopeepayTransaction.setOnClickListener {
             listener.onExpandBottomSheet()
+            viewModel.initPayment("Shopee")
         }
     }
 

@@ -18,3 +18,11 @@ data class Angkot(
     val price : Int
 ) : Parcelable
 
+@Parcelize
+data class QrScanning(
+    val id: String,
+    val licensePlate: String,
+    val name: String,
+    val routeId: String,
+    val routeName: String,
+): Parcelable

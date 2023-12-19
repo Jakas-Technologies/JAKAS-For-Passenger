@@ -9,7 +9,11 @@ interface SocketUserPositionHandlerService {
 
     fun sendUserPosition(userPosition: LatLng)
 
-    fun closeConnection() : Resource<Unit>
+    fun getAngkotPosition(callback: (List<String>) -> Unit)
+
+    fun closeConnection()
+
+    fun checkConnection() : Boolean?
 }
 
 /*

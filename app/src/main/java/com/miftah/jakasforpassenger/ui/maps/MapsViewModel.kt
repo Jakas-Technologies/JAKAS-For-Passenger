@@ -28,8 +28,8 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
     private var _isOnPath = MutableLiveData<Boolean>()
     val isOnPath: LiveData<Boolean> = _isOnPath
 
-    private var _userPosition = MutableLiveData<SerializableDestination>()
-    val userPosition: LiveData<SerializableDestination> = _userPosition
+    private var _userPosition = MutableLiveData<LatLng>()
+    val userPosition: LiveData<LatLng> = _userPosition
 
     private var _serviceLive = MutableLiveData<Boolean>()
     val serviceLive: LiveData<Boolean> = _serviceLive
@@ -48,10 +48,8 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
         }
     }
 
-    fun updateUserPosition(newValue: SerializableDestination?) {
-        newValue?.let {
-            _userPosition.postValue(it)
-        }
+    fun updateUserPosition(newValue: LatLng) {
+        _userPosition.postValue(newValue)
     }
 
     fun updateServiceStatus(status: Boolean) {
@@ -81,7 +79,7 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
             false,
             tolerance
         )
-        val lastData = _pointDestination.value
+        val lastData = _pointPosition.value
         lastData?.let {
             it.latLng = userLocation
             if (!resultUser) _pointPosition.postValue(lastData)

@@ -9,6 +9,14 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
     <application
         android:name=".BaseApplication"
         android:allowBackup="true"
@@ -26,7 +34,8 @@
             android:exported="false" />
         <activity
             android:name=".ui.qrscanner.QrCodeScannerActivity"
-            android:exported="false" />
+            android:exported="true">
+        </activity>
         <activity
             android:name=".ui.transaction.TransactionActivity"
             android:exported="true">

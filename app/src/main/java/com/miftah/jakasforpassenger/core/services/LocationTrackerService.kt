@@ -15,7 +15,6 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
 import com.miftah.jakasforpassenger.R
-import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.QrRequest
 import com.miftah.jakasforpassenger.core.data.source.remote.socket.SocketUserPositionHandlerService
 import com.miftah.jakasforpassenger.ui.maps.MapsActivity
 import com.miftah.jakasforpassenger.utils.Angkot
@@ -31,6 +30,7 @@ import com.miftah.jakasforpassenger.utils.Constants.EXTRA_POSITION_SERIALIZABLE
 import com.miftah.jakasforpassenger.utils.Constants.NOTIFICATION_CHANNEL_ID
 import com.miftah.jakasforpassenger.utils.Constants.NOTIFICATION_ID
 import com.miftah.jakasforpassenger.utils.MapsUtility
+import com.miftah.jakasforpassenger.utils.QrScanning
 import com.miftah.jakasforpassenger.utils.SerializableDestination
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
@@ -49,7 +49,7 @@ class LocationTrackerService : LifecycleService() {
 
     private var destinationPath: SerializableDestination? = null
     private var positionPath: SerializableDestination? = null
-    private var angkotIdentity: QrRequest? = null
+    private var angkotIdentity: QrScanning? = null
     private var angkotDepartment: Angkot? = null
 
     companion object {
@@ -62,9 +62,15 @@ class LocationTrackerService : LifecycleService() {
     override fun onCreate() {
         super.onCreate()
         postInitialValues()
-
+        socketUserPositionHandlerService.initSession()
         isTracking.observe(this) {
             updateLocationTracking(it)
+        }
+
+        socketUserPositionHandlerService.getAngkotPosition { data ->
+            data.forEach {
+                Timber.d(it)
+            }
         }
     }
 
@@ -103,7 +109,7 @@ class LocationTrackerService : LifecycleService() {
                     angkotIdentity = if (Build.VERSION.SDK_INT >= 33) {
                         intent.getParcelableExtra(
                             EXTRA_IDENTITY_ANGKOT,
-                            QrRequest::class.java
+                            QrScanning::class.java
                         )
                     } else {
                         intent.getParcelableExtra(EXTRA_IDENTITY_ANGKOT)
@@ -145,7 +151,6 @@ class LocationTrackerService : LifecycleService() {
         positionPath?.let {
             userPosition.postValue(it.latLng)
         }
-        socketUserPositionHandlerService.initSession()
     }
 
     @SuppressLint("MissingPermission")
@@ -178,7 +183,7 @@ class LocationTrackerService : LifecycleService() {
                     )
                     realtimeUserPosition.postValue(lastLatLng)
                     socketUserPositionHandlerService.sendUserPosition(lastLatLng)
-                    Timber.d("NEW LOCATION: ${location.latitude}, ${location.longitude}")
+//                    Timber.d("NEW LOCATION: ${location.latitude}, ${location.longitude}")
                 }
             }
         }
@@ -193,7 +198,7 @@ class LocationTrackerService : LifecycleService() {
             .setContentTitle("Find Transportation Near You")
             .setContentIntent(pendingIntent())
 
-        if(!serviceKilled) startForeground(NOTIFICATION_ID, notificationBuilder.build())
+        if (!serviceKilled) startForeground(NOTIFICATION_ID, notificationBuilder.build())
     }
 
     private fun pendingIntent(): PendingIntent {

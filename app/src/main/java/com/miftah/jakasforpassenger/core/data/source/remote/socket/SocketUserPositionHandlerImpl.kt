@@ -18,11 +18,11 @@ class SocketUserPositionHandlerImpl @Inject constructor() : SocketUserPositionHa
     override fun initSession(): Resource<Unit> {
         return try {
             val token =
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZmlyc3ROYW1lIjoiZ2FtbWEiLCJsYXN0TmFtZSI6InJpenF1aGEiLCJlbWFpbCI6ImdhbW1hQGVtYWlsLmNvbSIsInJvbGUiOiJ1c2VyIiwicGFzc3dvcmQiOiJ3b3JkIiwiY3JlYXRlZEF0IjoiMjAyMy0xMi0xM1QxNTo1MTozMi44NzVaIiwidXBkYXRlZEF0IjoiMjAyMy0xMi0xM1QxNTo1MTozMi44NzVaIiwiaWF0IjoxNzAyNDgyNzk1fQ.Ad_KUePAh1c9AF5wRgR1wfQG_DlyTVDd1_SBsn7aj1k"
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiZmlyc3ROYW1lIjoidGVzdCIsImxhc3ROYW1lIjoiYWNjb3VudCIsImVtYWlsIjoidGVzdEBlbWFpbC5jb20iLCJyb2xlIjoidXNlciIsInBhc3N3b3JkIjoidGVzdCIsImNyZWF0ZWRBdCI6IjIwMjMtMTItMTdUMTM6Mjc6MzkuNDM0WiIsInVwZGF0ZWRBdCI6IjIwMjMtMTItMTdUMTM6Mjc6MzkuNDM0WiIsImlhdCI6MTcwMjk3MzM2NH0.rX4adroocIl9JO46Rfi2cAWsYbhFaIDKtdlvj1EbcA4"
             val option = IO.Options.builder()
                 .setExtraHeaders(mapOf("auth" to listOf("Bearer $token")))
                 .build()
-            socket = IO.socket("http://34.128.115.212:3000/", option)
+            socket = IO.socket("https://34.128.115.212.nip.io/", option)
             socket?.connect()
             if (socket?.isActive == true) {
                 Timber.d("Connect")
@@ -37,26 +37,7 @@ class SocketUserPositionHandlerImpl @Inject constructor() : SocketUserPositionHa
         }
     }
 
-    /*
-    socketHandler.onGeolocationData { jsonDataList ->
-
-    jsonDataList.forEach { jsonData ->
-
-        val geoJson = Gson().fromJson(jsonData, GeoJsonObject::class.java)
-
-        // Process the GeoJSON data here
-
-    }
-}
-    * */
-
     override fun sendUserPosition(userPosition: LatLng) {
-        /*        val position = listOf(userPosition.latitude, userPosition.latitude)
-                val data = GeoJSON(
-                    geometry = Geometry(position, "Point"),
-                    type = "User Position",
-                    properties = Properties("User Destination")
-                )*/
         val jsonObject = GeoGamma(
             id = 1,
             coords = Coords(
@@ -70,26 +51,22 @@ class SocketUserPositionHandlerImpl @Inject constructor() : SocketUserPositionHa
             )
         )
 
-        Timber.d("Share Loc")
-//        val data = Json.encodeToString(jsonObject)
+//        Timber.d("Share Loc")
         val gson = Gson()
         val data = JSONObject(gson.toJson(jsonObject))
-        socket?.emit("user-move", data)
+        socket?.emit("usermove", data)
     }
 
-    override fun closeConnection(): Resource<Unit> {
-        return try {
-            socket?.disconnect()
-            if (socket?.isActive == false) {
-                Timber.d("Connect")
-                Resource.Success(Unit)
-            } else {
-                Timber.e("Couldn't close a connection.")
-                Resource.Error("Couldn't close a connection.")
-            }
-        } catch (e: Exception) {
-            Timber.e(e)
-            Resource.Error(e.localizedMessage ?: "Unknown error")
+    override fun getAngkotPosition(callback: (List<String>) -> Unit) {
+        socket?.on("drivermove") { data ->
+            Timber.tag("SOCKET").d("get Loc")
+            callback(data.map { it as String })
         }
     }
+
+    override fun closeConnection() {
+        socket?.disconnect()
+    }
+
+    override fun checkConnection(): Boolean? = socket?.connected()
 }
