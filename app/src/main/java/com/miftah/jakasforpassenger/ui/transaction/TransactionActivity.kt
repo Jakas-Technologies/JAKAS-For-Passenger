@@ -3,6 +3,8 @@ package com.miftah.jakasforpassenger.ui.transaction
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -12,7 +14,9 @@ import com.miftah.jakasforpassenger.databinding.ActivityTransactionBinding
 import com.miftah.jakasforpassenger.utils.Angkot
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DEPARTMENT_ANGKOT
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_QR_CODE
+import com.miftah.jakasforpassenger.utils.Constants.EXTRA_URL_REDIRECT
 import com.miftah.jakasforpassenger.utils.QrScanning
+import com.miftah.jakasforpassenger.utils.Result
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -35,8 +39,34 @@ class TransactionActivity : AppCompatActivity(), PaymentMethodeFragment.OnButton
         paymentBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
 
         binding.paymentInc.btnFinishTransaction.setOnClickListener {
-            Intent(this, PaymentActivity::class.java).let {
-                startActivity(it)
+            viewModel.paymentMethode.observe(this) {
+                val data = viewModel.midtransRequest()
+                data ?: return@observe
+                viewModel.initTransaction(data, it).observe(this) { result ->
+                    when (result) {
+                        is Result.Error -> {
+                            binding.progressBar.visibility = View.GONE
+                            Toast.makeText(this, "Err", Toast.LENGTH_SHORT).show()
+                        }
+
+                        Result.Loading -> {
+                            binding.progressBar.visibility = View.VISIBLE
+                        }
+
+                        is Result.Success -> {
+                            binding.progressBar.visibility = View.GONE
+                            result.data.actions.forEach { action ->
+                                if (action.name == "deeplink-redirect") {
+                                    Intent(this, PaymentActivity::class.java).let { intent ->
+                                        intent.putExtra(EXTRA_URL_REDIRECT, action.url)
+                                        startActivity(intent)
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
             }
         }
 
@@ -62,11 +92,7 @@ class TransactionActivity : AppCompatActivity(), PaymentMethodeFragment.OnButton
         }
 
         viewModel.paymentMethode.observe(this) {
-            binding.paymentInc.paymentHasSelected.text = it
-        }
-
-        binding.paymentInc.btnFinishTransaction.setOnClickListener {
-
+            binding.paymentInc.paymentHasSelected.text = it.name
         }
 
         paymentBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN

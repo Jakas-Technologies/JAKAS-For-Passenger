@@ -34,6 +34,7 @@ object Constants {
     const val EXTRA_DEPARTMENT_ANGKOT = "EXTRA_DEPARTMENT_ANGKOT"
     const val EXTRA_IDENTITY_ANGKOT = "EXTRA_IDENTITY_ANGKOT"
     const val EXTRA_QR_CODE = "EXTRA_QR_CODE"
+    const val EXTRA_URL_REDIRECT = "EXTRA_URL_REDIRECT"
 
     enum class MapObjective {
         DESTINATION, POSITION
