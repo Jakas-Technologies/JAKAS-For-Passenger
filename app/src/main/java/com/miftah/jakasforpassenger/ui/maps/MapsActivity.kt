@@ -267,13 +267,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             fusedLocationProviderClient.lastLocation.addOnSuccessListener { data ->
                 if (data != null) {
                     val latLng = LatLng(data.latitude, data.longitude)
-                    /*val namePosition = "Your Position"
-                    val serializableDestination = SerializableDestination(
-                        name = namePosition,
-                        address = namePosition,
-                        latLng = latLng
-                    )
-                    viewModel.updatePoint(MapObjective.POSITION, serializableDestination)*/
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, MAP_ZOOM))
                 } else {
                     Timber.d("Empty")
@@ -437,8 +430,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             }
 
             btnScanFind.setOnClickListener {
-//                angkotIdentity = QrRequest(1, 1, 1.1)
-//                sendCommandToService(ACTION_STOP_SERVICE)
                 Intent(this@MapsActivity, QrCodeScannerActivity::class.java).apply {
                     resultLauncher.launch(this)
                 }
@@ -450,12 +441,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             }
 
             btnFinishPayment.setOnClickListener {
-                angkotIdentity = null
                 sendCommandToService(ACTION_STOP_SERVICE)
                 Intent(this@MapsActivity, TransactionActivity::class.java).let {
-                    it.putExtra(Constants.EXTRA_DRIVER_ID, angkotChoice?.id.toString())
-                    it.putExtra(Constants.EXTRA_AMOUNT, 1)
-                    it.putExtra(Constants.EXTRA_PRICE, angkotChoice?.price as Int)
+                    it.putExtra(EXTRA_DEPARTMENT_ANGKOT, angkotChoice as Angkot)
+                    it.putExtra(EXTRA_QR_CODE, angkotIdentity as QrScanning)
                     startActivity(it)
                 }
             }

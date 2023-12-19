@@ -5,17 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingBottom="10dp"
-    app:behavior_hideable="false"
-    app:behavior_peekHeight="32dp"
+    android:paddingTop="20dp"
+    app:behavior_hideable="true"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
-
-    <com.google.android.material.bottomsheet.BottomSheetDragHandleView
-        android:id="@+id/drag_handle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/payment_has_selected_container"
@@ -25,7 +17,7 @@
         android:padding="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/drag_handle">
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/payment_has_selected"
@@ -35,7 +27,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="Gopay" />
+            android:visibility="visible"
+            android:text="Gopay" />
 
         <TextView
             android:layout_width="wrap_content"

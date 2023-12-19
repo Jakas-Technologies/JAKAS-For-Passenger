@@ -20,9 +20,9 @@ data class Angkot(
 
 @Parcelize
 data class QrScanning(
-    val id: String,
-    val licensePlate: String,
-    val name: String,
-    val routeId: String,
-    val routeName: String,
+    val id: String?,
+    val licensePlate: String?,
+    val name: String?,
+    val routeId: String?,
+    val routeName: String?,
 ): Parcelable

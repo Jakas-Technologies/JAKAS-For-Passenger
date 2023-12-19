@@ -16,6 +16,7 @@ import com.miftah.jakasforpassenger.utils.Constants
 import com.miftah.jakasforpassenger.utils.QrScanning
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
+import java.io.IOException
 import java.util.concurrent.Executors
 
 @AndroidEntryPoint
@@ -23,7 +24,6 @@ class QrCodeScannerActivity : AppCompatActivity() {
 
     private lateinit var cameraProvider: ProcessCameraProvider
     private lateinit var qrCodeScanner: QRCodeScanner
-    private var result : String? = null
 
     private lateinit var binding: ActivityQrCodeScannerBinding
 
@@ -78,31 +78,30 @@ class QrCodeScannerActivity : AppCompatActivity() {
         }.launch(android.Manifest.permission.CAMERA)
     }
 
-    private var shouldUpdate = true
-    private fun parsingToObject(newValue : String) {
+    private fun parsingToObject(newValue: String) {
         val gson = Gson()
         val intent = Intent()
 
-        if (shouldUpdate) {
-            result = newValue
-            shouldUpdate = false
-            stopCamera()
-        }
-        result?.let {
-            val dataJson = gson.fromJson(result, QrScanning::class.java)
+        try {
+            val dataJson = gson.fromJson(newValue, QrScanning::class.java)
+            dataJson.let {
+                it.id?: throw IOException("Qr Code is not valid")
+                it.name?:throw IOException("Qr Code is not valid")
+                it.licensePlate?:throw IOException("Qr Code is not valid")
+                it.routeId?:throw IOException("Qr Code is not valid")
+                it.routeName?:throw IOException("Qr Code is not valid")
+            }
             val dataIntent = intent.putExtra(Constants.EXTRA_QR_CODE, dataJson)
             setResult(RESULT_OK, dataIntent)
+            cameraProvider.unbindAll()
             finish()
-            Toast.makeText(this, result, Toast.LENGTH_SHORT).show()
+        } catch (e : Exception) {
+            Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
         }
-    }
-
-    private fun stopCamera() {
-        cameraProvider.unbindAll()
     }
 
     override fun onDestroy() {
-        stopCamera()
+        cameraProvider.unbindAll()
         super.onDestroy()
     }
 }

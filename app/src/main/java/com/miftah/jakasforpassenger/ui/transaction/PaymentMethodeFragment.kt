@@ -6,8 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import com.miftah.jakasforpassenger.databinding.FragmentPaymentMethodeBinding
+import com.miftah.jakasforpassenger.utils.Constants
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -18,7 +19,7 @@ class PaymentMethodeFragment : Fragment() {
     private var _binding: FragmentPaymentMethodeBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: TransactionViewModel by viewModels()
+    private val viewModel: TransactionViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -30,14 +31,13 @@ class PaymentMethodeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-//        paymentBottomSheetBehavior = BottomSheetBehavior.from(view.findViewById(R.id.payment_inc))
         binding.cardGopayTransaction.setOnClickListener {
+            viewModel.choosePayment(Constants.Payment.GOPAY)
             listener.onExpandBottomSheet()
-            viewModel.initPayment("GoPay")
         }
         binding.cardShopeepayTransaction.setOnClickListener {
+            viewModel.choosePayment(Constants.Payment.SHOPEEPAY)
             listener.onExpandBottomSheet()
-            viewModel.initPayment("Shopee")
         }
     }
 

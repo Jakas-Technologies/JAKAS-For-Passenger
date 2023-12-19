@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.miftah.jakasforpassenger.core.data.source.AppRepository
 import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.MidtransRequest
 import com.miftah.jakasforpassenger.utils.Angkot
+import com.miftah.jakasforpassenger.utils.Constants
 import com.miftah.jakasforpassenger.utils.QrScanning
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -27,9 +28,14 @@ class TransactionViewModel @Inject constructor(private val repository: AppReposi
         _driverIdentity.postValue(qrScanning)
     }
 
-    fun choosePayment(payment : String) {
-        _paymentMethode.postValue(payment)
+    fun choosePayment(payment : Constants.Payment) {
+        when(payment) {
+            Constants.Payment.SHOPEEPAY -> _paymentMethode.postValue("ShopeePay")
+            Constants.Payment.GOPAY -> _paymentMethode.postValue("Gopay")
+        }
     }
 
     fun initTransactionGopay(midtrans : MidtransRequest) = repository.initGopay(midtrans)
+
+    fun initTransactionShopee(midtrans : MidtransRequest) = repository.initShopee(midtrans)
 }

@@ -34,11 +34,12 @@ object Constants {
     const val EXTRA_DEPARTMENT_ANGKOT = "EXTRA_DEPARTMENT_ANGKOT"
     const val EXTRA_IDENTITY_ANGKOT = "EXTRA_IDENTITY_ANGKOT"
     const val EXTRA_QR_CODE = "EXTRA_QR_CODE"
-    const val EXTRA_DRIVER_ID = "EXTRA_DRIVER_ID"
-    const val EXTRA_AMOUNT = "EXTRA_AMOUNT"
-    const val EXTRA_PRICE = "EXTRA_PRICE"
 
     enum class MapObjective {
         DESTINATION, POSITION
+    }
+
+    enum class Payment {
+        GOPAY, SHOPEEPAY
     }
 }
