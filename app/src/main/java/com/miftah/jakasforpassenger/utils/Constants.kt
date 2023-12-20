@@ -1,10 +1,12 @@
 package com.miftah.jakasforpassenger.utils
 
 import android.graphics.Color
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 
 object Constants {
     const val BASE_URL = "http://34.101.89.120:4000/"
-    const val MIDTRANS_URL = "https://a48e-125-163-5-232.ngrok-free.app/v1/payment/charge/"
+    const val MIDTRANS_URL = "https://dfb6-125-163-5-232.ngrok-free.app/"
 
     const val REQUEST_CODE_LOCATION_PERMISSION = 0
 
@@ -35,12 +37,18 @@ object Constants {
     const val EXTRA_IDENTITY_ANGKOT = "EXTRA_IDENTITY_ANGKOT"
     const val EXTRA_QR_CODE = "EXTRA_QR_CODE"
     const val EXTRA_URL_REDIRECT = "EXTRA_URL_REDIRECT"
+    const val EXTRA_PRICE = "EXTRA_PRICE"
+
+    const val SHARED_PREFERENCES_KEY = "SHARED_PREFERENCES_KEY"
+    val USERNAME = stringPreferencesKey("username")
+    val TOKEN_KEY = stringPreferencesKey("token")
+    val IS_LOGIN_KEY = booleanPreferencesKey("isLogin")
 
     enum class MapObjective {
         DESTINATION, POSITION
     }
 
-    enum class Payment {
-        GOPAY, SHOPEEPAY
+    enum class Payment(val data : String) {
+        GOPAY("gopay"), SHOPEEPAY("shopeepay")
     }
 }

@@ -50,19 +50,19 @@ class TransactionViewModel @Inject constructor(private val repository: AppReposi
             quantity = 1
         )
         return MidtransRequest(
-            payment_type = paymentMethode.value?.name!!,
+            payment_type = paymentMethode.value?.data!!,
             items = listOf(item)
         )
     }
 
     fun initTransaction(midtrans: MidtransRequest, payment: Constants.Payment): LiveData<Result<SanboxMidtransReponse>> {
-        when (payment) {
+        return when (payment) {
             GOPAY -> {
-                return repository.initGopay(midtrans)
+                repository.initTransaction(midtrans)
             }
 
             SHOPEEPAY -> {
-                return repository.initShopee(midtrans)
+                repository.initTransaction(midtrans)
             }
         }
     }

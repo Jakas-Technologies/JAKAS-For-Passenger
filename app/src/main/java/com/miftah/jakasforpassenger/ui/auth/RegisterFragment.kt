@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.miftah.jakasforpassenger.databinding.FragmentRegisterBinding
 import com.miftah.jakasforpassenger.utils.Result
@@ -17,7 +17,7 @@ class RegisterFragment : Fragment() {
 
     private var _binding: FragmentRegisterBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: OnboardingViewModel by viewModels()
+    private val viewModel: OnboardingViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,7 +34,9 @@ class RegisterFragment : Fragment() {
             val username = binding.edRegisUsername.editText?.text.toString()
             val email = binding.edRegisEmail.editText?.text.toString()
             val password = binding.edRegisPassword.editText?.text.toString()
-            viewModel.userRegis(username = username, email = email, password = password)
+            val age = binding.edRegisAge.editText?.text.toString().toInt()
+            // TODO buat error handle age
+            viewModel.userRegis(username = username, email = email, password = password, age = age)
                 .observe(viewLifecycleOwner) { data ->
                     when (data) {
                         is Result.Loading -> binding.progressBar.visibility = View.VISIBLE
@@ -42,7 +44,7 @@ class RegisterFragment : Fragment() {
                             binding.progressBar.visibility = View.GONE
                             Toast.makeText(
                                 requireContext(),
-                                "Error",
+                                data.error,
                                 Toast.LENGTH_SHORT
                             ).show()
                         }

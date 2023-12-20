@@ -41,7 +41,7 @@ class TransactionActivity : AppCompatActivity(), PaymentMethodeFragment.OnButton
         binding.paymentInc.btnFinishTransaction.setOnClickListener {
             viewModel.paymentMethode.observe(this) {
                 val data = viewModel.midtransRequest()
-                data ?: return@observe
+                data?: return@observe
                 viewModel.initTransaction(data, it).observe(this) { result ->
                     when (result) {
                         is Result.Error -> {
@@ -63,8 +63,9 @@ class TransactionActivity : AppCompatActivity(), PaymentMethodeFragment.OnButton
                                     }
                                 }
                             }
-
                         }
+
+                        else -> {}
                     }
                 }
             }

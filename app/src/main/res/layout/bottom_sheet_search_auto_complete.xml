@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    app:behavior_hideable="true"
-    app:behavior_peekHeight="32dp"
+    app:behavior_hideable="false"
+    app:behavior_peekHeight="20dp"
     android:focusableInTouchMode="true"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 

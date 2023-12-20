@@ -69,6 +69,7 @@ import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DEPARTMENT_ANGKOT
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DESTINATION_SERIALIZABLE
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_IDENTITY_ANGKOT
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_POSITION_SERIALIZABLE
+import com.miftah.jakasforpassenger.utils.Constants.EXTRA_PRICE
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_QR_CODE
 import com.miftah.jakasforpassenger.utils.Constants.KEY_MAP
 import com.miftah.jakasforpassenger.utils.Constants.MAP_ZOOM
@@ -132,6 +133,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 result.data?.getParcelableExtra(EXTRA_QR_CODE)
             }
             angkotIdentity?.let {
+                binding.paymentStateInc.apply {
+                    licenseAngkot.text = it.licensePlate
+                    nameDriver.text = it.name
+                    routeName.text = it.routeName
+                }
                 sendCommandToService(Constants.ACTION_START_PAYING_SERVICE)
             }
         }
@@ -403,6 +409,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 btnCancelFind.visibility = View.GONE
                 btnFinishPayment.visibility = View.GONE
                 btnCancelPayment.visibility = View.GONE
+                driverHasSelectedContainer.visibility = View.GONE
             } else {
                 if (angkotIdentity == null) {
                     btnConfirmFind.visibility = View.GONE
@@ -411,9 +418,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                     btnCancelFind.visibility = View.VISIBLE
                     btnFinishPayment.visibility = View.GONE
                     btnCancelPayment.visibility = View.GONE
+                    driverHasSelectedContainer.visibility = View.GONE
                 } else {
                     btnFinishPayment.visibility = View.VISIBLE
                     btnCancelPayment.visibility = View.VISIBLE
+                    driverHasSelectedContainer.visibility = View.VISIBLE
                     btnConfirmFind.visibility = View.GONE
                     rvAngkotDirection.visibility = View.GONE
                     btnScanFind.visibility = View.GONE
@@ -430,14 +439,30 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             }
 
             btnScanFind.setOnClickListener {
-                Intent(this@MapsActivity, QrCodeScannerActivity::class.java).apply {
-                    resultLauncher.launch(this)
+                Intent(this@MapsActivity, QrCodeScannerActivity::class.java).let {
+                    it.putExtra(EXTRA_PRICE, angkotChoice?.price as Int)
+                    resultLauncher.launch(it)
                 }
             }
 
             btnCancelPayment.setOnClickListener {
                 angkotIdentity = null
-                sendCommandToService(ACTION_CANCEL_PAYING_SERVICE)
+                viewModel.cancleMidtrans().observe(this@MapsActivity) { result ->
+                    when(result) {
+                        is Result.Error -> {
+                            binding.progressBar.visibility = View.GONE
+                            Toast.makeText(this@MapsActivity, "Something Went Wrong", Toast.LENGTH_SHORT).show()
+                        }
+                        Result.Loading -> {
+                            binding.progressBar.visibility = View.VISIBLE
+                        }
+                        is Result.Success -> {
+                            binding.progressBar.visibility = View.GONE
+                            Toast.makeText(this@MapsActivity, "Trip Canceled", Toast.LENGTH_SHORT).show()
+                            sendCommandToService(ACTION_CANCEL_PAYING_SERVICE)
+                        }
+                    }
+                }
             }
 
             btnFinishPayment.setOnClickListener {

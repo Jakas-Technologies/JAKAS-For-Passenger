@@ -86,4 +86,6 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
         }
         _isOnPath.postValue(resultUser)
     }
+
+    fun cancleMidtrans() =  repository.cancleMidtrans()
 }

@@ -78,14 +78,14 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 
-    <include
-        android:id="@+id/autocomplete_inc"
-        layout="@layout/bottom_sheet_search_auto_complete"
-        android:visibility="visible" />
 
     <include
         android:id="@+id/payment_state_inc"
         layout="@layout/bottom_sheet_map_state"/>
+
+    <include
+        android:id="@+id/autocomplete_inc"
+        layout="@layout/bottom_sheet_search_auto_complete"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_find_my_location"

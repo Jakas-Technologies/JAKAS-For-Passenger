@@ -5,9 +5,12 @@ import androidx.lifecycle.liveData
 import com.google.android.gms.maps.model.LatLng
 import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.LoginRequest
 import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.MidtransRequest
-import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.RegisterRequest
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.QrRequest
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.RegisterPassengerRequest
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.CancelResponse
 import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.LoginResponse
-import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.RegisterResponse
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.QrResponse
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.RegisterPassengerResponse
 import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.SanboxMidtransReponse
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiService
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.MidtransApiService
@@ -27,10 +30,11 @@ class AppRepository @Inject constructor(
     fun userRegis(
         name: String,
         email: String,
+        age: Int,
         password: String
-    ): LiveData<Result<RegisterResponse>> = liveData {
+    ): LiveData<Result<RegisterPassengerResponse>> = liveData {
         emit(Result.Loading)
-        val registerRequest = RegisterRequest(name, email, password)
+        val registerRequest = RegisterPassengerRequest(age, email, name, password)
         try {
             val response = apiService.register(registerRequest)
             emit(Result.Success(response))
@@ -62,7 +66,7 @@ class AppRepository @Inject constructor(
         emit(Result.Success(Dummy.dummyAngkot()))
     }
 
-    fun initGopay(midtransRequest: MidtransRequest): LiveData<Result<SanboxMidtransReponse>> =
+    /*fun initGopay(midtransRequest: MidtransRequest): LiveData<Result<SanboxMidtransReponse>> =
         liveData {
             emit(Result.Loading)
             try {
@@ -72,18 +76,40 @@ class AppRepository @Inject constructor(
                 Timber.e(e)
                 emit(Result.Error(e.message.toString()))
             }
-        }
+        }*/
 
-    fun initShopee(midtransRequest: MidtransRequest): LiveData<Result<SanboxMidtransReponse>> =
+    fun initTransaction(midtransRequest: MidtransRequest): LiveData<Result<SanboxMidtransReponse>> =
         liveData {
             emit(Result.Loading)
             try {
                 val data = apiMidtransService.initTransactionShopee(midtransRequest)
                 emit(Result.Success(data))
-            } catch (e : Exception) {
+            } catch (e : HttpException) {
                 Timber.e(e)
                 emit(Result.Error(e.message.toString()))
             }
         }
 
+
+    fun qrToMidtrans(qrRequest: QrRequest) : LiveData<Result<QrResponse>> = liveData {
+        emit(Result.Loading)
+        try {
+            val data = apiMidtransService.qrToMidtrans(qrRequest)
+            emit(Result.Success(data))
+        } catch (e : HttpException) {
+            Timber.e(e)
+            emit(Result.Error(e.message.toString()))
+        }
+    }
+
+    fun cancleMidtrans() : LiveData<Result<CancelResponse>>  = liveData {
+        emit(Result.Loading)
+        try {
+            val data = apiMidtransService.midtransCancel()
+            emit(Result.Success(data))
+        } catch (e : HttpException) {
+            Timber.e(e)
+            emit(Result.Error(e.message.toString()))
+        }
+    }
 }

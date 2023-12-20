@@ -1,10 +1,15 @@
 package com.miftah.jakasforpassenger.core.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.miftah.jakasforpassenger.BuildConfig
 import com.miftah.jakasforpassenger.core.data.source.AppRepository
+import com.miftah.jakasforpassenger.core.data.source.preference.UserPref
+import com.miftah.jakasforpassenger.core.data.source.preference.UserPreferenceImpl
+import com.miftah.jakasforpassenger.core.data.source.preference.dataStore
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiHelper
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiService
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiServiceImpl
@@ -113,4 +118,12 @@ object AppModule {
     @Singleton
     fun bindMidtransApiServiceImpl(midtransApiServiceImpl: MidtransApiServiceImpl): MidtransApiHelper =
         midtransApiServiceImpl
+
+    @Singleton
+    @Provides
+    fun provideDataStore(@ApplicationContext app: Context): DataStore<Preferences> = app.dataStore
+
+    @Singleton
+    @Provides
+    fun proveideUserPreference(userPreference: UserPreferenceImpl): UserPref = userPreference
 }
