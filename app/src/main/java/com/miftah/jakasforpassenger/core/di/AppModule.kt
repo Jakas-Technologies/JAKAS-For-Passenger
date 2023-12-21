@@ -24,6 +24,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -57,9 +60,29 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAuthInterceptor(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient =
+    fun provideAuth(userPref : UserPref): Interceptor = Interceptor { chain ->
+        val req = chain.request()
+
+        val token = runBlocking {
+            userPref.getSession().first().token
+        }
+
+        val requestHeaders = if (token.isNotBlank()) {
+            req.newBuilder()
+                .addHeader("auth", "Bearer $token")
+                .build()
+        } else {
+            req
+        }
+        chain.proceed(requestHeaders)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthInterceptor(loggingInterceptor: HttpLoggingInterceptor, interceptor: Interceptor): OkHttpClient =
         OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
+            .addInterceptor(interceptor)
             .build()
 
     @Provides

@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/purple"
-    tools:context=".ui.auth.LoginFragment"
-    android:padding="20dp">
+    android:padding="20dp"
+    tools:context=".ui.auth.LoginFragment">
 
     <com.google.android.material.card.MaterialCardView
         android:layout_width="0dp"
@@ -27,48 +27,61 @@
             android:padding="15dp">
 
             <ImageView
+                android:id="@+id/ic_logo_utama"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:src="@drawable/logoutama"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toTopOf="@+id/ed_login_email"/>
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_title_app"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="JAKAS For Passenger"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/ic_logo_utama" />
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/ed_login_email"
+                android:id="@+id/ly_login_email"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
                 android:hint="Email"
                 app:boxStrokeWidth="5dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/ed_login_password">
+                app:layout_constraintTop_toBottomOf="@+id/tv_title_app">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    app:boxStrokeColor="@color/black"
-                    app:boxStrokeWidth="5dp"
+                    android:id="@+id/ed_login_email"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent"
+                    app:boxStrokeColor="@color/black"
+                    app:boxStrokeWidth="5dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/ed_login_password"
+                android:id="@+id/ly_login_password"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:hint="Password"
                 app:boxStrokeWidth="5dp"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toBottomOf="@+id/ly_login_email">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    app:boxStrokeWidth="5dp"
+                    android:id="@+id/ed_login_password"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent"
+                    app:boxStrokeWidth="5dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
@@ -79,7 +92,7 @@
                 android:text="Register Account Now"
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ed_login_password" />
+                app:layout_constraintTop_toBottomOf="@+id/ly_login_password" />
 
             <Button
                 android:id="@+id/btn_login"
@@ -90,7 +103,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ed_login_password" />
+                app:layout_constraintTop_toBottomOf="@+id/ly_login_password" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </com.google.android.material.card.MaterialCardView>
@@ -105,6 +118,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="visible" />
+        tools:visibility="gone" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

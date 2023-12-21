@@ -25,6 +25,7 @@ class OnboardingViewModel @Inject constructor(private val repository: AppReposit
             )
         }
     }
+
     fun userRegis(email: String, username: String, password: String, age : Int) =
         repository.userRegis(name = username, email = email, password = password, age = age)
 

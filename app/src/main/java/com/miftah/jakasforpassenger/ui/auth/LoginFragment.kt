@@ -5,10 +5,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.miftah.jakasforpassenger.databinding.FragmentLoginBinding
 import com.miftah.jakasforpassenger.ui.home.MainActivity
+import com.miftah.jakasforpassenger.utils.Result
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -30,13 +32,13 @@ class LoginFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnLogin.setOnClickListener {
-            val email = binding.edLoginEmail.editText?.text.toString()
-            val pass = binding.edLoginPassword.editText?.text.toString()
+            val email = binding.edLoginEmail.text.toString()
+            val pass = binding.edLoginPassword.text.toString()
             viewModel.createSave("Miftah")
             Intent(activity, MainActivity::class.java).let {
                 startActivity(it)
             }
-            /*viewModel.userLogin(email, pass).observe(viewLifecycleOwner) { data ->
+            viewModel.userLogin(email, pass).observe(viewLifecycleOwner) { data ->
                 when (data) {
                     is Result.Loading -> binding.progressBar.visibility = View.VISIBLE
                     is Result.Error -> {
@@ -54,11 +56,10 @@ class LoginFragment : Fragment() {
                             requireContext(),
                             "Sukses", Toast.LENGTH_SHORT
                         ).show()
-
                         activity?.finish()
                     }
                 }
-            }*/
+            }
         }
     }
 

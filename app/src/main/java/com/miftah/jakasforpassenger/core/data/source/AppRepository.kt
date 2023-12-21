@@ -56,7 +56,6 @@ class AppRepository @Inject constructor(
         }
     }
 
-    // TODO fetch from CC angkot apa saja
     fun findAngkotBaseOnPositionAndDestination(
         position: LatLng,
         destination: LatLng
@@ -65,18 +64,6 @@ class AppRepository @Inject constructor(
         delay(500L)
         emit(Result.Success(Dummy.dummyAngkot()))
     }
-
-    /*fun initGopay(midtransRequest: MidtransRequest): LiveData<Result<SanboxMidtransReponse>> =
-        liveData {
-            emit(Result.Loading)
-            try {
-                val data = apiMidtransService.initTransactionGopay(midtransRequest)
-                emit(Result.Success(data))
-            } catch (e : Exception) {
-                Timber.e(e)
-                emit(Result.Error(e.message.toString()))
-            }
-        }*/
 
     fun initTransaction(midtransRequest: MidtransRequest): LiveData<Result<SanboxMidtransReponse>> =
         liveData {
