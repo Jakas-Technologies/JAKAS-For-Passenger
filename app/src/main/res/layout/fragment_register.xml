@@ -67,6 +67,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/ed_regis_username">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:inputType="numberDecimal"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -84,6 +85,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/ed_regis_age">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:inputType="textEmailAddress"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -101,6 +103,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/ed_regis_email">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:inputType="textPassword"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
             </com.google.android.material.textfield.TextInputLayout>

@@ -60,7 +60,6 @@ import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
 import com.miftah.jakasforpassenger.databinding.ActivityMapsBinding
 import com.miftah.jakasforpassenger.ui.qrscanner.QrCodeScannerActivity
 import com.miftah.jakasforpassenger.ui.transaction.TransactionActivity
-import com.miftah.jakasforpassenger.utils.Angkot
 import com.miftah.jakasforpassenger.utils.Constants
 import com.miftah.jakasforpassenger.utils.Constants.ACTION_CANCEL_PAYING_SERVICE
 import com.miftah.jakasforpassenger.utils.Constants.ACTION_STOP_SERVICE
@@ -304,14 +303,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 onClick = { angkot ->
                     binding.paymentStateInc.paymentHasSelectedContainer.visibility = View.VISIBLE
                     angkotChoice = angkot
-//                    binding.paymentStateInc.priceHasSelected.text = angkot.price.toString()
                     binding.paymentStateInc.angkotDirection.text = angkot.id.toString()
                 }
             )
             when (result) {
                 is Result.Success -> {
                     binding.progressBar.visibility = View.GONE
-                    adapter.submitList(result.data.drivers)
+                    if (result.data.drivers.isEmpty()) {
+                        binding.paymentStateInc.noData.visibility = View.VISIBLE
+                    } else {
+                        binding.paymentStateInc.noData.visibility = View.GONE
+                        adapter.submitList(result.data.drivers)
+                    }
+
                     binding.paymentStateInc.rvAngkotDirection.adapter = adapter
                 }
 
@@ -475,7 +479,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             btnFinishPayment.setOnClickListener {
                 sendCommandToService(ACTION_STOP_SERVICE)
                 Intent(this@MapsActivity, TransactionActivity::class.java).let {
-                    it.putExtra(EXTRA_DEPARTMENT_ANGKOT, angkotChoice as Angkot)
+                    it.putExtra(EXTRA_DEPARTMENT_ANGKOT, angkotChoice as DriversItem)
                     it.putExtra(EXTRA_QR_CODE, angkotIdentity as QrScanning)
                     startActivity(it)
                 }

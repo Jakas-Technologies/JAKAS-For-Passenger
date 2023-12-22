@@ -217,7 +217,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/driver_has_selected_container"
-        tools:visibility="visible" />
+        tools:visibility="gone" />
 
     <TextView
         android:id="@+id/btn_cancel_payment"
@@ -229,7 +229,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_finish_payment"
-        tools:visibility="visible" />
+        tools:visibility="gone" />
 
     <!-- hilang setelah di confirm -->
     <androidx.recyclerview.widget.RecyclerView
@@ -242,7 +242,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:listitem="@layout/item_department_angkot"
-        tools:visibility="gone" />
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/no_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No Data"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <Button
         android:id="@+id/btn_confirm_find"
