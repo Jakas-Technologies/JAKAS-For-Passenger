@@ -8,7 +8,7 @@ import java.text.NumberFormat
 import java.util.Locale
 
 object Constants {
-    const val BASE_URL = "https://34.128.115.212.nip.io/"
+    const val BASE_URL = "https://34.128.112.136.nip.io/"
 
     const val REQUEST_CODE_LOCATION_PERMISSION = 0
 

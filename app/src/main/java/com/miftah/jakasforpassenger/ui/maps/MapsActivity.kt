@@ -29,6 +29,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -55,6 +56,7 @@ import com.google.maps.android.PolyUtil
 import com.google.maps.model.DirectionsResult
 import com.miftah.jakasforpassenger.R
 import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.DriversItem
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.FareResponse
 import com.miftah.jakasforpassenger.core.services.LocationTrackerService
 import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
 import com.miftah.jakasforpassenger.databinding.ActivityMapsBinding
@@ -68,6 +70,7 @@ import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DEPARTMENT_ANGKOT
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DESTINATION_SERIALIZABLE
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_IDENTITY_ANGKOT
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_POSITION_SERIALIZABLE
+import com.miftah.jakasforpassenger.utils.Constants.EXTRA_PRICE
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_QR_CODE
 import com.miftah.jakasforpassenger.utils.Constants.KEY_MAP
 import com.miftah.jakasforpassenger.utils.Constants.MAP_ZOOM
@@ -105,6 +108,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     private var angkotChoice: DriversItem? = null
     private var polylineRoute: Polyline? = null
     private var angkotIdentity: QrScanning? = null
+    private var price: FareResponse? = null
 
     private var serviceOn = false
     private var isFilled = false
@@ -118,7 +122,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     private var markerDestination: Marker? = null
     private var markerPosition: Marker? = null
     private var markerUser: Marker? = null
-    private var markerAngkot : Marker? = null
+    private var markerAngkot: Marker? = null
 
     private lateinit var workManager: WorkManager
 
@@ -185,13 +189,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         }
         LocationTrackerService.angkotPosition.observe(this) { angkotPosition ->
             if (serviceOn) {
-                /*markerAngkot?.remove()
+                markerAngkot?.remove()
                 val markerOption = MarkerOptions().apply {
                     position(angkotPosition)
                     anchor(0.5f, 0.5f)
                     icon(BitmapDescriptorFactory.fromResource(R.drawable.img_angkot))
                 }
-                markerPosition = mMap.addMarker(markerOption)*/
+                markerPosition = mMap.addMarker(markerOption)
             }
         }
         LocationTrackerService.userPosition.observe(this) { userLastPosition ->
@@ -451,25 +455,34 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
             btnScanFind.setOnClickListener {
                 Intent(this@MapsActivity, QrCodeScannerActivity::class.java).let {
-//                    it.putExtra(EXTRA_PRICE, angkotChoice?.price as Int)
-                    resultLauncher.launch(it)
+                    price?.let {fare ->
+                        it.putExtra(EXTRA_PRICE, fare.data.fare)
+                        resultLauncher.launch(it)
+                    }
                 }
             }
 
             btnCancelPayment.setOnClickListener {
                 angkotIdentity = null
                 viewModel.cancleMidtrans().observe(this@MapsActivity) { result ->
-                    when(result) {
+                    when (result) {
                         is Result.Error -> {
                             binding.progressBar.visibility = View.GONE
-                            Toast.makeText(this@MapsActivity, "Something Went Wrong", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this@MapsActivity,
+                                "Something Went Wrong",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
+
                         Result.Loading -> {
                             binding.progressBar.visibility = View.VISIBLE
                         }
+
                         is Result.Success -> {
                             binding.progressBar.visibility = View.GONE
-                            Toast.makeText(this@MapsActivity, "Trip Canceled", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@MapsActivity, "Trip Canceled", Toast.LENGTH_SHORT)
+                                .show()
                             sendCommandToService(ACTION_CANCEL_PAYING_SERVICE)
                         }
                     }
@@ -481,6 +494,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 Intent(this@MapsActivity, TransactionActivity::class.java).let {
                     it.putExtra(EXTRA_DEPARTMENT_ANGKOT, angkotChoice as DriversItem)
                     it.putExtra(EXTRA_QR_CODE, angkotIdentity as QrScanning)
+                    it.putExtra(EXTRA_PRICE, price as FareResponse)
                     startActivity(it)
                 }
             }
@@ -492,18 +506,26 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         val userType = viewModel.getUserType()
         val positionPoint = nameDestination[MapObjective.POSITION.name]
         val destinationPoint = nameDestination[MapObjective.DESTINATION.name]
-        if(positionPoint != null && destinationPoint != null) {
-            viewModel.getPredict(destinationPoint.latLng, pointPosition = positionPoint.latLng, userType).observe(this@MapsActivity) {result ->
-                when(result) {
+        if (positionPoint != null && destinationPoint != null) {
+            viewModel.getPredict(
+                destinationPoint.latLng,
+                pointPosition = positionPoint.latLng,
+                userType
+            ).observe(this@MapsActivity) { result ->
+                when (result) {
                     is Result.Error -> {
                         binding.progressBar.visibility = View.GONE
                         Toast.makeText(this, result.error, Toast.LENGTH_SHORT).show()
                     }
+
                     Result.Loading -> {
                         binding.progressBar.visibility = View.VISIBLE
                     }
+
                     is Result.Success -> {
-                        binding.paymentStateInc.priceHasSelected.text = formatToRupiah(result.data.data.fuelPrice)
+                        price = result.data
+                        binding.paymentStateInc.priceHasSelected.text =
+                            formatToRupiah(result.data.data.fuelPrice)
                     }
                 }
             }

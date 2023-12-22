@@ -79,7 +79,7 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
     fun isUserOnPath(
         userLocation: LatLng,
         polyline: Polyline,
-        tolerance: Double = 10.0
+        tolerance: Double = 20.0
     ) {
         val listLng = polylineToListLatLng(polyline)
         val resultUser = PolyUtil.isLocationOnPath(

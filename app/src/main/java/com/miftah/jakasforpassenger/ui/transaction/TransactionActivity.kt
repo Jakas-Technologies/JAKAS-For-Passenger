@@ -10,9 +10,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.miftah.jakasforpassenger.R
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.DriversItem
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.FareResponse
 import com.miftah.jakasforpassenger.databinding.ActivityTransactionBinding
-import com.miftah.jakasforpassenger.utils.Angkot
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DEPARTMENT_ANGKOT
+import com.miftah.jakasforpassenger.utils.Constants.EXTRA_PRICE
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_QR_CODE
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_URL_REDIRECT
 import com.miftah.jakasforpassenger.utils.QrScanning
@@ -25,8 +27,9 @@ class TransactionActivity : AppCompatActivity(), PaymentMethodeFragment.OnButton
     private lateinit var binding: ActivityTransactionBinding
     private lateinit var paymentBottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
 
-    private var angkot: Angkot? = null
+    private var angkot: DriversItem? = null
     private var driverIdentity: QrScanning? = null
+    private var price : FareResponse? = null
 
     private val viewModel: TransactionViewModel by viewModels()
 
@@ -72,8 +75,9 @@ class TransactionActivity : AppCompatActivity(), PaymentMethodeFragment.OnButton
         }
 
         if (Build.VERSION.SDK_INT >= 33) {
-            angkot = intent.getParcelableExtra(EXTRA_DEPARTMENT_ANGKOT, Angkot::class.java)
+            angkot = intent.getParcelableExtra(EXTRA_DEPARTMENT_ANGKOT, DriversItem::class.java)
             driverIdentity = intent.getParcelableExtra(EXTRA_QR_CODE, QrScanning::class.java)
+            price = intent.getParcelableExtra(EXTRA_PRICE, FareResponse::class.java)
         } else {
             angkot = intent.getParcelableExtra(EXTRA_DEPARTMENT_ANGKOT)
             driverIdentity = intent.getParcelableExtra(EXTRA_QR_CODE)
@@ -88,8 +92,8 @@ class TransactionActivity : AppCompatActivity(), PaymentMethodeFragment.OnButton
             binding.paymentInc.driverHasSelected.text = it.name
         }
 
-        viewModel.angkot.observe(this) {
-            binding.paymentInc.priceHasSelected.text = it.price.toString()
+        viewModel.price.observe(this) {
+            binding.paymentInc.priceHasSelected.text = it.data.fuelPrice.toString()
         }
 
         viewModel.paymentMethode.observe(this) {
