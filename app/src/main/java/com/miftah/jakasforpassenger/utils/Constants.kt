@@ -2,11 +2,13 @@ package com.miftah.jakasforpassenger.utils
 
 import android.graphics.Color
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import java.text.NumberFormat
+import java.util.Locale
 
 object Constants {
-    const val BASE_URL = "http://34.101.89.120:4000/"
-    const val MIDTRANS_URL = "https://dfb6-125-163-5-232.ngrok-free.app/"
+    const val BASE_URL = "https://34.128.115.212.nip.io/"
 
     const val REQUEST_CODE_LOCATION_PERMISSION = 0
 
@@ -42,13 +44,20 @@ object Constants {
     const val SHARED_PREFERENCES_KEY = "SHARED_PREFERENCES_KEY"
     val USERNAME = stringPreferencesKey("username")
     val TOKEN_KEY = stringPreferencesKey("token")
+    val USER_TYPE_KEY = stringPreferencesKey("userTypeKey")
+    val ID_KEY = intPreferencesKey("id")
     val IS_LOGIN_KEY = booleanPreferencesKey("isLogin")
 
     enum class MapObjective {
         DESTINATION, POSITION
     }
 
-    enum class Payment(val data : String) {
+    enum class Payment(val data: String) {
         GOPAY("gopay"), SHOPEEPAY("shopeepay")
+    }
+
+    fun formatToRupiah(amount: Int): String {
+        val currencyFormat = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+        return currencyFormat.format(amount.toLong())
     }
 }

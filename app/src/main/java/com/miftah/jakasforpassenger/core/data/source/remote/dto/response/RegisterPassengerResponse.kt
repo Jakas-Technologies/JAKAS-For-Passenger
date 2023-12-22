@@ -11,10 +11,10 @@ data class RegisterPassengerResponse(
 	val message: String,
 
 	@field:SerializedName("user")
-	val user: User
+	val user: UserRegister
 )
 
-data class User(
+data class UserRegister(
 
 	@field:SerializedName("createdAt")
 	val createdAt: String,

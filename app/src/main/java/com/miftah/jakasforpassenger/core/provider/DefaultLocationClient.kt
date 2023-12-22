@@ -66,6 +66,7 @@ class DefaultLocationClient @Inject constructor(
     }
 
     private var locationUser: Location? = null
+
     @SuppressLint("MissingPermission")
     override fun getLastKnown(): Location? {
         if (!MapsUtility.hasLocationPermissions(context)) {

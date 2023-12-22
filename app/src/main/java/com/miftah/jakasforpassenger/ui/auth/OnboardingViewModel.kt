@@ -3,7 +3,7 @@ package com.miftah.jakasforpassenger.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.miftah.jakasforpassenger.core.data.source.AppRepository
-import com.miftah.jakasforpassenger.core.data.source.preference.UserPref
+import com.miftah.jakasforpassenger.core.data.source.preference.UserPreference
 import com.miftah.jakasforpassenger.core.data.source.preference.model.UserModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -13,14 +13,16 @@ import javax.inject.Inject
 class OnboardingViewModel @Inject constructor(private val repository: AppRepository) : ViewModel() {
 
     @Inject
-    lateinit var userPref: UserPref
+    lateinit var userPreference: UserPreference
 
-    fun createSave(username : String) {
+    fun createSave(id: Int, username: String, token: String, userType : String) {
         viewModelScope.launch {
-            userPref.saveSession(
+            userPreference.saveSession(
                 UserModel(
+                    id = id,
                     username = username,
-                    token = "123",
+                    token = token,
+                    userType = userType
                 )
             )
         }

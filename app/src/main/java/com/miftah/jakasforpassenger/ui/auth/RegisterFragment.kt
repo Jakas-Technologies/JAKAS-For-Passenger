@@ -62,6 +62,10 @@ class RegisterFragment : Fragment() {
                     }
                 }
         }
+
+        binding.tvBackToLogin.setOnClickListener {
+            findNavController().popBackStack()
+        }
     }
 
     override fun onDestroy() {

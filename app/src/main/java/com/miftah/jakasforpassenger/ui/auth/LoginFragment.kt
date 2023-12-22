@@ -8,6 +8,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
+import com.miftah.jakasforpassenger.R
 import com.miftah.jakasforpassenger.databinding.FragmentLoginBinding
 import com.miftah.jakasforpassenger.ui.home.MainActivity
 import com.miftah.jakasforpassenger.utils.Result
@@ -31,15 +33,15 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.tvBackToLogin.setOnClickListener {
+            findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
+        }
+
         binding.btnLogin.setOnClickListener {
             val email = binding.edLoginEmail.text.toString()
             val pass = binding.edLoginPassword.text.toString()
-            viewModel.createSave("Miftah")
-            Intent(activity, MainActivity::class.java).let {
-                startActivity(it)
-            }
-            viewModel.userLogin(email, pass).observe(viewLifecycleOwner) { data ->
-                when (data) {
+            viewModel.userLogin(email, pass).observe(viewLifecycleOwner) { result ->
+                when (result) {
                     is Result.Loading -> binding.progressBar.visibility = View.VISIBLE
                     is Result.Error -> {
                         binding.progressBar.visibility = View.GONE
@@ -56,6 +58,10 @@ class LoginFragment : Fragment() {
                             requireContext(),
                             "Sukses", Toast.LENGTH_SHORT
                         ).show()
+                        viewModel.createSave(result.data.user.id, result.data.user.name, result.data.accessToken, result.data.user.userType)
+                        Intent(activity, MainActivity::class.java).let {
+                            startActivity(it)
+                        }
                         activity?.finish()
                     }
                 }

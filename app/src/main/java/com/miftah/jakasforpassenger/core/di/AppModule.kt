@@ -7,15 +7,12 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.miftah.jakasforpassenger.BuildConfig
 import com.miftah.jakasforpassenger.core.data.source.AppRepository
-import com.miftah.jakasforpassenger.core.data.source.preference.UserPref
+import com.miftah.jakasforpassenger.core.data.source.preference.UserPreference
 import com.miftah.jakasforpassenger.core.data.source.preference.UserPreferenceImpl
 import com.miftah.jakasforpassenger.core.data.source.preference.dataStore
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiHelper
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiService
 import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.ApiServiceImpl
-import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.MidtransApiHelper
-import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.MidtransApiService
-import com.miftah.jakasforpassenger.core.data.source.remote.retrofit.MidtransApiServiceImpl
 import com.miftah.jakasforpassenger.core.provider.DefaultLocationClient
 import com.miftah.jakasforpassenger.core.provider.LocationClient
 import com.miftah.jakasforpassenger.utils.Constants
@@ -41,9 +38,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideRepository(
-        apiService: ApiService,
-        apiMidtransService: MidtransApiService
-    ): AppRepository = AppRepository(apiService, apiMidtransService)
+        apiService: ApiService
+    ): AppRepository = AppRepository(apiService)
 
     @Provides
     @Named("URL")
@@ -60,16 +56,16 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAuth(userPref : UserPref): Interceptor = Interceptor { chain ->
+    fun provideAuth(userPreference : UserPreference): Interceptor = Interceptor { chain ->
         val req = chain.request()
 
         val token = runBlocking {
-            userPref.getSession().first().token
+            userPreference.getSession().first().token
         }
 
         val requestHeaders = if (token.isNotBlank()) {
             req.newBuilder()
-                .addHeader("auth", "Bearer $token")
+                .addHeader("Authorization", "Bearer $token")
                 .build()
         } else {
             req
@@ -116,37 +112,11 @@ object AppModule {
     ): LocationClient =
         DefaultLocationClient(app, fusedLocationProviderClient)
 
-    @Provides
-    @Named("MIDTRANS_URL")
-    fun provideMidtransUrl(): String = Constants.MIDTRANS_URL
-
-    @Provides
-    @Singleton
-    @Named("MIDTRANS_RETROFIT")
-    fun provideMidtransRetrofit(
-        @Named("MIDTRANS_URL") url: String,
-        client: OkHttpClient
-    ): Retrofit = Retrofit.Builder()
-        .baseUrl(url)
-        .addConverterFactory(GsonConverterFactory.create())
-        .client(client)
-        .build()
-
-    @Provides
-    @Singleton
-    fun provideMidtransApiService(@Named("MIDTRANS_RETROFIT") retrofit: Retrofit): MidtransApiService =
-        retrofit.create(MidtransApiService::class.java)
-
-    @Provides
-    @Singleton
-    fun bindMidtransApiServiceImpl(midtransApiServiceImpl: MidtransApiServiceImpl): MidtransApiHelper =
-        midtransApiServiceImpl
-
     @Singleton
     @Provides
     fun provideDataStore(@ApplicationContext app: Context): DataStore<Preferences> = app.dataStore
 
     @Singleton
     @Provides
-    fun proveideUserPreference(userPreference: UserPreferenceImpl): UserPref = userPreference
+    fun proveideUserPreference(userPreference: UserPreferenceImpl): UserPreference = userPreference
 }

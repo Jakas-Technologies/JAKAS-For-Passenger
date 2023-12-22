@@ -5,27 +5,26 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.DriversItem
 import com.miftah.jakasforpassenger.databinding.ItemDepartmentAngkotBinding
-import com.miftah.jakasforpassenger.utils.Angkot
 
-class AngkotDepartmentAdapter(val onClick: (Angkot) -> Unit) :
-    ListAdapter<Angkot, AngkotDepartmentAdapter.ViewHolder>(DIF_CALLBACK) {
+class AngkotDepartmentAdapter(val onClick: (DriversItem) -> Unit) :
+    ListAdapter<DriversItem, AngkotDepartmentAdapter.ViewHolder>(DIF_CALLBACK) {
 
     inner class ViewHolder(val binding: ItemDepartmentAngkotBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(angkot : Angkot) {
-            binding.keyAngkotPlat.text = angkot.id.toString()
-            binding.keyAngkotPrice.text = angkot.price.toString()
+        fun bind(angkot : DriversItem) {
+            binding.keyAngkotPlat.text = angkot.licensePlate
         }
     }
 
     companion object {
-        val DIF_CALLBACK = object : DiffUtil.ItemCallback<Angkot>() {
-            override fun areItemsTheSame(oldItem: Angkot, newItem: Angkot): Boolean {
+        val DIF_CALLBACK = object : DiffUtil.ItemCallback<DriversItem>() {
+            override fun areItemsTheSame(oldItem: DriversItem, newItem: DriversItem): Boolean {
                 return oldItem == newItem
             }
 
-            override fun areContentsTheSame(oldItem: Angkot, newItem: Angkot): Boolean {
+            override fun areContentsTheSame(oldItem: DriversItem, newItem: DriversItem): Boolean {
                 return oldItem == newItem
             }
         }

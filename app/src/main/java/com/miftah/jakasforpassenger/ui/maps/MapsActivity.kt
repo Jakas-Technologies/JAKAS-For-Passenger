@@ -54,6 +54,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
 import com.google.maps.android.PolyUtil
 import com.google.maps.model.DirectionsResult
 import com.miftah.jakasforpassenger.R
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.DriversItem
 import com.miftah.jakasforpassenger.core.services.LocationTrackerService
 import com.miftah.jakasforpassenger.core.workers.FindRouteWorker
 import com.miftah.jakasforpassenger.databinding.ActivityMapsBinding
@@ -62,14 +63,12 @@ import com.miftah.jakasforpassenger.ui.transaction.TransactionActivity
 import com.miftah.jakasforpassenger.utils.Angkot
 import com.miftah.jakasforpassenger.utils.Constants
 import com.miftah.jakasforpassenger.utils.Constants.ACTION_CANCEL_PAYING_SERVICE
-import com.miftah.jakasforpassenger.utils.Constants.ACTION_START_SERVICE
 import com.miftah.jakasforpassenger.utils.Constants.ACTION_STOP_SERVICE
 import com.miftah.jakasforpassenger.utils.Constants.DESTINATION_LAT_LNG
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DEPARTMENT_ANGKOT
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_DESTINATION_SERIALIZABLE
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_IDENTITY_ANGKOT
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_POSITION_SERIALIZABLE
-import com.miftah.jakasforpassenger.utils.Constants.EXTRA_PRICE
 import com.miftah.jakasforpassenger.utils.Constants.EXTRA_QR_CODE
 import com.miftah.jakasforpassenger.utils.Constants.KEY_MAP
 import com.miftah.jakasforpassenger.utils.Constants.MAP_ZOOM
@@ -77,6 +76,7 @@ import com.miftah.jakasforpassenger.utils.Constants.MapObjective
 import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_COLOR
 import com.miftah.jakasforpassenger.utils.Constants.POLYLINE_WIDTH
 import com.miftah.jakasforpassenger.utils.Constants.POSITION_LAT_LNG
+import com.miftah.jakasforpassenger.utils.Constants.formatToRupiah
 import com.miftah.jakasforpassenger.utils.QrScanning
 import com.miftah.jakasforpassenger.utils.Result
 import com.miftah.jakasforpassenger.utils.SerializableDestination
@@ -103,9 +103,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
     private val adapter = PlacePredictionAdapter()
 
-    private var angkotChoice: Angkot? = null
+    private var angkotChoice: DriversItem? = null
     private var polylineRoute: Polyline? = null
-    private var userPosition: LatLng = LatLng(0.0, 0.0)
     private var angkotIdentity: QrScanning? = null
 
     private var serviceOn = false
@@ -120,6 +119,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     private var markerDestination: Marker? = null
     private var markerPosition: Marker? = null
     private var markerUser: Marker? = null
+    private var markerAngkot : Marker? = null
 
     private lateinit var workManager: WorkManager
 
@@ -184,10 +184,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         LocationTrackerService.isTracking.observe(this) { isTracking ->
             viewModel.updateServiceStatus(isTracking)
         }
-        LocationTrackerService.angkotPosition.observe(this) { allAngkotPosition ->
-//            if (serviceOn) {
-//
-//            }
+        LocationTrackerService.angkotPosition.observe(this) { angkotPosition ->
+            if (serviceOn) {
+                /*markerAngkot?.remove()
+                val markerOption = MarkerOptions().apply {
+                    position(angkotPosition)
+                    anchor(0.5f, 0.5f)
+                    icon(BitmapDescriptorFactory.fromResource(R.drawable.img_angkot))
+                }
+                markerPosition = mMap.addMarker(markerOption)*/
+            }
         }
         LocationTrackerService.userPosition.observe(this) { userLastPosition ->
             if (serviceOn) {
@@ -246,6 +252,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 angkotDirectionRv()
                 paymentBehaviour()
                 findRoute()
+                findFareAndResult()
             }
         }
 
@@ -297,14 +304,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 onClick = { angkot ->
                     binding.paymentStateInc.paymentHasSelectedContainer.visibility = View.VISIBLE
                     angkotChoice = angkot
-                    binding.paymentStateInc.priceHasSelected.text = angkot.price.toString()
+//                    binding.paymentStateInc.priceHasSelected.text = angkot.price.toString()
                     binding.paymentStateInc.angkotDirection.text = angkot.id.toString()
                 }
             )
             when (result) {
                 is Result.Success -> {
                     binding.progressBar.visibility = View.GONE
-                    adapter.submitList(result.data)
+                    adapter.submitList(result.data.drivers)
                     binding.paymentStateInc.rvAngkotDirection.adapter = adapter
                 }
 
@@ -431,7 +438,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             }
 
             btnConfirmFind.setOnClickListener {
-                sendCommandToService(ACTION_START_SERVICE)
+                sendCommandToService(Constants.ACTION_START_SERVICE)
             }
 
             btnCancelFind.setOnClickListener {
@@ -440,7 +447,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
             btnScanFind.setOnClickListener {
                 Intent(this@MapsActivity, QrCodeScannerActivity::class.java).let {
-                    it.putExtra(EXTRA_PRICE, angkotChoice?.price as Int)
+//                    it.putExtra(EXTRA_PRICE, angkotChoice?.price as Int)
                     resultLauncher.launch(it)
                 }
             }
@@ -475,6 +482,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             }
         }
 
+    }
+
+    private fun findFareAndResult() {
+        val userType = viewModel.getUserType()
+        val positionPoint = nameDestination[MapObjective.POSITION.name]
+        val destinationPoint = nameDestination[MapObjective.DESTINATION.name]
+        if(positionPoint != null && destinationPoint != null) {
+            viewModel.getPredict(destinationPoint.latLng, pointPosition = positionPoint.latLng, userType).observe(this@MapsActivity) {result ->
+                when(result) {
+                    is Result.Error -> {
+                        binding.progressBar.visibility = View.GONE
+                        Toast.makeText(this, result.error, Toast.LENGTH_SHORT).show()
+                    }
+                    Result.Loading -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                    }
+                    is Result.Success -> {
+                        binding.paymentStateInc.priceHasSelected.text = formatToRupiah(result.data.data.fuelPrice)
+                    }
+                }
+            }
+        }
     }
 
     private var cursor = true
@@ -654,7 +683,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 EXTRA_DESTINATION_SERIALIZABLE,
                 nameDestination[MapObjective.DESTINATION.name]
             )
-            it.putExtra(EXTRA_DEPARTMENT_ANGKOT, angkotChoice as Angkot)
+            it.putExtra(EXTRA_DEPARTMENT_ANGKOT, angkotChoice as DriversItem)
             angkotIdentity?.let { data ->
                 it.putExtra(EXTRA_IDENTITY_ANGKOT, data)
             }

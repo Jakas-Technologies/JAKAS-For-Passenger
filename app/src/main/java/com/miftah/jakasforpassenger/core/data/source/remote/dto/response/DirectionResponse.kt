@@ -1,8 +1,10 @@
 package com.miftah.jakasforpassenger.core.data.source.remote.dto.response
 
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 
-data class LoginResponse(
+data class DirectionResponse(
 
 	@field:SerializedName("success")
 	val success: Boolean,
@@ -10,17 +12,12 @@ data class LoginResponse(
 	@field:SerializedName("message")
 	val message: String,
 
-	@field:SerializedName("accessToken")
-	val accessToken: String,
-
-	@field:SerializedName("user")
-	val user: UserLogin,
-
-	@field:SerializedName("refreshToken")
-	val refreshToken: String
+	@field:SerializedName("drivers")
+	val drivers: List<DriversItem>
 )
 
-data class UserLogin(
+@Parcelize
+data class DriversItem(
 
 	@field:SerializedName("createdAt")
 	val createdAt: String,
@@ -28,17 +25,20 @@ data class UserLogin(
 	@field:SerializedName("password")
 	val password: String,
 
+	@field:SerializedName("licensePlate")
+	val licensePlate: String,
+
+	@field:SerializedName("routeId")
+	val routeId: Int,
+
 	@field:SerializedName("name")
 	val name: String,
 
 	@field:SerializedName("id")
 	val id: Int,
 
-	@field:SerializedName("userType")
-	val userType: String,
-
 	@field:SerializedName("accessToken")
-	val accessToken: Any,
+	val accessToken: String?,
 
 	@field:SerializedName("age")
 	val age: Int,
@@ -46,9 +46,12 @@ data class UserLogin(
 	@field:SerializedName("email")
 	val email: String,
 
+	@field:SerializedName("routeName")
+	val routeName: String,
+
 	@field:SerializedName("refreshToken")
 	val refreshToken: String?,
 
 	@field:SerializedName("updatedAt")
-	val updatedAt: String?
-)
+	val updatedAt: String
+) : Parcelable

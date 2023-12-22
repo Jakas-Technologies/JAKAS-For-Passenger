@@ -15,9 +15,9 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
 import com.miftah.jakasforpassenger.R
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.DriversItem
 import com.miftah.jakasforpassenger.core.data.source.remote.socket.SocketUserPositionHandlerService
 import com.miftah.jakasforpassenger.ui.maps.MapsActivity
-import com.miftah.jakasforpassenger.utils.Angkot
 import com.miftah.jakasforpassenger.utils.Constants
 import com.miftah.jakasforpassenger.utils.Constants.ACTION_CANCEL_PAYING_SERVICE
 import com.miftah.jakasforpassenger.utils.Constants.ACTION_START_PAYING_SERVICE
@@ -50,12 +50,12 @@ class LocationTrackerService : LifecycleService() {
     private var destinationPath: SerializableDestination? = null
     private var positionPath: SerializableDestination? = null
     private var angkotIdentity: QrScanning? = null
-    private var angkotDepartment: Angkot? = null
+    private var angkotDepartment: DriversItem? = null
 
     companion object {
         val userPosition = MutableLiveData<LatLng>()
         val realtimeUserPosition = MutableLiveData<LatLng>()
-        val angkotPosition = MutableLiveData<List<LatLng>>()
+        val angkotPosition = MutableLiveData<LatLng>()
         val isTracking = MutableLiveData<Boolean>()
     }
 
@@ -68,9 +68,8 @@ class LocationTrackerService : LifecycleService() {
         }
 
         socketUserPositionHandlerService.getAngkotPosition { data ->
-            data.forEach {
-                Timber.d(it)
-            }
+            Timber.d("GET ANGKOT!")
+//            angkotPosition.postValue(LatLng(data.coords.latitude, data.coords.longitude))
         }
     }
 
@@ -90,7 +89,7 @@ class LocationTrackerService : LifecycleService() {
                         )
                         angkotDepartment = intent.getParcelableExtra(
                             EXTRA_DEPARTMENT_ANGKOT,
-                            Angkot::class.java
+                            DriversItem::class.java
                         )
                     } else {
                         destinationPath = intent.getParcelableExtra(EXTRA_DESTINATION_SERIALIZABLE)
@@ -144,7 +143,7 @@ class LocationTrackerService : LifecycleService() {
         isTracking.postValue(false)
         userPosition.postValue(LatLng(0.0, 0.0))
         realtimeUserPosition.postValue(LatLng(0.0, 0.0))
-        angkotPosition.postValue(mutableListOf())
+//        angkotPosition.postValue(mutableListOf())
     }
 
     private fun initTracking() {
@@ -182,7 +181,12 @@ class LocationTrackerService : LifecycleService() {
                         location.longitude
                     )
                     realtimeUserPosition.postValue(lastLatLng)
-                    socketUserPositionHandlerService.sendUserPosition(lastLatLng)
+                    angkotDepartment?.let {
+                        socketUserPositionHandlerService.sendUserPosition(
+                            lastLatLng,
+                            it
+                        )
+                    }
 //                    Timber.d("NEW LOCATION: ${location.latitude}, ${location.longitude}")
                 }
             }

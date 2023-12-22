@@ -7,10 +7,16 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Polyline
 import com.google.maps.android.PolyUtil
 import com.miftah.jakasforpassenger.core.data.source.AppRepository
+import com.miftah.jakasforpassenger.core.data.source.preference.UserPreference
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.request.FarePredict
+import com.miftah.jakasforpassenger.core.data.source.remote.dto.response.FareResponse
 import com.miftah.jakasforpassenger.utils.Constants.MapObjective
 import com.miftah.jakasforpassenger.utils.MapsUtility.polylineToListLatLng
+import com.miftah.jakasforpassenger.utils.Result
 import com.miftah.jakasforpassenger.utils.SerializableDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,6 +39,9 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
 
     private var _serviceLive = MutableLiveData<Boolean>()
     val serviceLive: LiveData<Boolean> = _serviceLive
+
+    @Inject
+    lateinit var userPreference: UserPreference
 
     fun updatePoint(pointType: MapObjective, newValue: SerializableDestination) {
         when (pointType) {
@@ -87,5 +96,20 @@ class MapsViewModel @Inject constructor(private val repository: AppRepository) :
         _isOnPath.postValue(resultUser)
     }
 
-    fun cancleMidtrans() =  repository.cancleMidtrans()
+    fun cancleMidtrans() = repository.cancleMidtrans()
+
+    fun getPredict(pointDestination: LatLng, pointPosition: LatLng, userType: String) : LiveData<Result<FareResponse>> {
+        val farePredict = FarePredict(
+            destinationLat = pointDestination.latitude,
+            destinationLng = pointDestination.longitude,
+            originLat = pointPosition.latitude,
+            originLng = pointPosition.longitude,
+            passengerType = userType
+        )
+        return repository.getFarePredict(farePredict)
+    }
+
+    fun getUserType() = runBlocking {
+        userPreference.getSession().first().userType
+    }
 }
