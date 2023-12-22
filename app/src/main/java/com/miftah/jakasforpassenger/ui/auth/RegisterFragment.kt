@@ -34,9 +34,10 @@ class RegisterFragment : Fragment() {
             val username = binding.edRegisUsername.editText?.text.toString()
             val email = binding.edRegisEmail.editText?.text.toString()
             val password = binding.edRegisPassword.editText?.text.toString()
-            val age = binding.edRegisAge.editText?.text.toString().toInt()
-            // TODO buat error handle age
-            viewModel.userRegis(username = username, email = email, password = password, age = age)
+            val age = binding.edRegisAge.editText?.text.toString()
+
+            if (username.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty() && age.isNotEmpty())
+            viewModel.userRegis(username = username, email = email, password = password, age = age.toInt())
                 .observe(viewLifecycleOwner) { data ->
                     when (data) {
                         is Result.Loading -> binding.progressBar.visibility = View.VISIBLE
